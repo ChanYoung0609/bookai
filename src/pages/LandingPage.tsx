@@ -1,9 +1,24 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { Sparkles, Palette, BookOpen } from "lucide-react";
 
 const LandingPage = () => {
+  const navigate = useNavigate();
+
+  const handleCreateClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const hasToken = document.cookie.split(';').some((item) => item.trim().startsWith('token='));
+    
+    if (!hasToken) {
+      if (window.confirm("로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?")) {
+        navigate("/login");
+      }
+    } else {
+      navigate("/create");
+    }
+  };
+
   return (
     <div className="min-h-screen pt-24 magical-gradient relative overflow-hidden">
       {/* Background Atmosphere */}
@@ -27,7 +42,11 @@ const LandingPage = () => {
             아이의 상상력이 현실이 되는 공간. 몇 번의 클릭만으로 고퀄리티 일러스트와 함께 나만의 이야기를 완성하세요.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-8">
-            <Link to="/create" className="px-10 py-5 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-full text-lg font-bold shadow-2xl hover:shadow-primary/30 transition-all hover:-translate-y-1 active:scale-95">
+            <Link 
+              to="/create" 
+              onClick={handleCreateClick}
+              className="px-10 py-5 bg-gradient-to-br from-primary to-primary-container text-on-primary rounded-full text-lg font-bold shadow-2xl hover:shadow-primary/30 transition-all hover:-translate-y-1 active:scale-95"
+            >
               지금 시작하기
             </Link>
             <Link to="/explore" className="px-10 py-5 glass-card text-on-surface rounded-full text-lg font-bold hover:bg-white transition-all hover:-translate-y-1 active:scale-95 border border-white/20">

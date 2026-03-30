@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Search, PlusCircle, Menu, X, LogIn } from "lucide-react";
 import { cn } from "../lib/utils";
 import { motion, AnimatePresence } from "motion/react";
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const isReading = location.pathname.startsWith('/read');
@@ -19,11 +20,25 @@ const Navbar = () => {
     checkToken();
   }, [location]);
 
+  const handleProtectedClick = (e: React.MouseEvent, target: string) => {
+    e.preventDefault();
+    const hasToken = document.cookie.split(';').some((item) => item.trim().startsWith('token='));
+    
+    if (!hasToken) {
+      if (window.confirm("로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?")) {
+        navigate("/login");
+      }
+    } else {
+      navigate(target);
+    }
+    setIsMobileMenuOpen(false);
+  };
+
   if (isReading) return null;
 
   const navLinks = [
-    { to: "/explore", label: "갤러리" },
-    { to: "/library", label: "내 서재" },
+    { to: "/explore", label: "갤러리", protected: false },
+    { to: "/library", label: "내 서재", protected: true },
   ];
 
   return (
@@ -39,6 +54,7 @@ const Navbar = () => {
             <Link 
               key={link.to}
               to={link.to} 
+              onClick={(e) => link.protected ? handleProtectedClick(e, link.to) : setIsMobileMenuOpen(false)}
               className={cn(
                 "text-on-surface hover:text-primary transition-colors font-label font-medium", 
                 location.pathname === link.to ? "text-primary" : "text-on-surface"
@@ -49,6 +65,7 @@ const Navbar = () => {
           ))}
           <Link 
             to="/create" 
+            onClick={(e) => handleProtectedClick(e, "/create")}
             className="bg-gradient-to-br from-primary to-primary-container text-on-primary px-6 py-2.5 rounded-full font-bold transition-all active:scale-95 duration-200 flex items-center gap-2"
           >
             <PlusCircle size={18} />
@@ -95,7 +112,7 @@ const Navbar = () => {
                 <Link 
                   key={link.to}
                   to={link.to} 
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={(e) => link.protected ? handleProtectedClick(e, link.to) : setIsMobileMenuOpen(false)}
                   className={cn(
                     "text-lg font-bold p-2 rounded-xl transition-colors", 
                     location.pathname === link.to ? "bg-primary/10 text-primary" : "text-on-surface"
@@ -106,7 +123,7 @@ const Navbar = () => {
               ))}
               <Link 
                 to="/create" 
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={(e) => handleProtectedClick(e, "/create")}
                 className="flex items-center justify-center gap-2 bg-gradient-to-br from-primary to-primary-container text-on-primary py-4 rounded-2xl font-bold shadow-lg"
               >
                 <PlusCircle size={20} />

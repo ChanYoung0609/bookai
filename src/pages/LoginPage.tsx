@@ -16,6 +16,10 @@ const LoginPage = () => {
     window.location.reload(); // Refresh to update navbar state
   };
 
+  const handleSocialLogin = (provider: string) => {
+    alert(`${provider} 로그인은 현재 준비 중입니다.`);
+  };
+
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden bg-surface font-body text-on-surface">
       {/* Main Content Canvas */}
@@ -98,12 +102,18 @@ const LoginPage = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 {/* Naver */}
-                <button className="flex items-center justify-center gap-2 bg-[#03C75A] text-white py-3 rounded-lg hover:brightness-95 active:scale-95 transition-all font-bold text-sm">
+                <button 
+                  onClick={() => handleSocialLogin("네이버")}
+                  className="flex items-center justify-center gap-2 bg-[#03C75A] text-white py-3 rounded-lg hover:brightness-95 active:scale-95 transition-all font-bold text-sm"
+                >
                   <span className="w-5 h-5 flex items-center justify-center font-black text-xs border border-white rounded-sm">N</span>
                   네이버
                 </button>
                 {/* Kakao */}
-                <button className="flex items-center justify-center gap-2 bg-[#FEE500] text-[#191919] py-3 rounded-lg hover:brightness-95 active:scale-95 transition-all font-bold text-sm">
+                <button 
+                  onClick={() => handleSocialLogin("카카오")}
+                  className="flex items-center justify-center gap-2 bg-[#FEE500] text-[#191919] py-3 rounded-lg hover:brightness-95 active:scale-95 transition-all font-bold text-sm"
+                >
                   <MessageCircle size={20} fill="currentColor" />
                   카카오
                 </button>
