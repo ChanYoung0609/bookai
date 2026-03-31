@@ -30,7 +30,7 @@ const SignUpPage = () => {
     setError("");
 
     if (name.trim().length < 2) {
-      setError("이름은 최소 2자 이상이어야 합니다.");
+      setError("이름은 최소 2자 이상이어야 해요.");
       return;
     }
 
@@ -40,12 +40,12 @@ const SignUpPage = () => {
     }
 
     if (!validatePassword(password)) {
-      setError("비밀번호는 최소 8자 이상이며, 최소 하나의 특수문자를 포함해야 합니다.");
+      setError("비밀번호는 최소 8자 이상이며, 최소 하나의 특수문자를 포함해야 해요.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("비밀번호가 일치하지 않습니다.");
+      setError("비밀번호가 일치하지 않아요.");
       return;
     }
 

@@ -132,7 +132,7 @@ const WizardPage = () => {
                 </div>
               </div>
               <div className="p-4 md:p-6 bg-surface-container-low rounded-2xl">
-                <p className="italic text-on-surface-variant text-sm md:text-base leading-relaxed">"거대한 참나무의 가장 높은 가지에, 구름을 만지는 꿈을 꾸는 너티라는 다람쥐가 살고 있었습니다. 어느 날, 하늘에서 황금 잎사귀가 떨어졌습니다..."</p>
+                <p className="italic text-on-surface-variant text-sm md:text-base leading-relaxed">"거대한 참나무의 가장 높은 가지에, 구름을 만지는 꿈을 꾸는 너티라는 다람쥐가 살고 있었어요. 어느 날, 하늘에서 황금 잎사귀가 떨어졌어요..."</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button onClick={() => setStep(1)} className="flex-1 glass py-4 md:py-5 rounded-2xl font-bold text-sm md:text-base">컨셉 수정</button>

@@ -27,7 +27,7 @@ const LoginPage = () => {
     }
 
     if (password.length < 8) {
-      setError("비밀번호는 최소 8자 이상이어야 합니다.");
+      setError("비밀번호는 최소 8자 이상이어야 해요.");
       return;
     }
 
@@ -38,7 +38,7 @@ const LoginPage = () => {
   };
 
   const handleSocialLogin = (provider: string) => {
-    alert(`${provider} 로그인은 현재 준비 중입니다.`);
+    alert(`${provider} 로그인은 현재 준비 중이에요.`);
   };
 
   return (
