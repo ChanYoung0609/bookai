@@ -60,10 +60,10 @@ const LandingPage = () => {
             AI 기반 스토리텔링
           </div>
           <h1 className="text-4xl md:text-6xl lg:text-8xl font-headline font-extrabold leading-[1.1] md:leading-[0.9] max-w-4xl mx-auto text-on-surface tracking-tight">
-            AI로 당신만의 <span className="text-primary italic">마법 같은</span> 동화책을 만드세요
+            AI로 당신만의 <span className="text-primary italic">마법 같은</span> 동화책을 만들어보세요
           </h1>
           <p className="text-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto font-body font-medium">
-            아이의 상상력이 현실이 되는 공간. 몇 번의 클릭만으로 고퀄리티 일러스트와 함께 나만의 이야기를 완성하세요.
+            아이의 상상력이 현실이 되는 공간이에요. 몇 번의 클릭만으로 고퀄리티 일러스트와 함께 나만의 이야기를 완성해보세요.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4 pt-8">
             <Link 
@@ -117,21 +117,21 @@ const LandingPage = () => {
                 <Sparkles size={32} />
               </div>
               <h4 className="text-2xl font-headline font-bold text-on-surface">AI 스토리텔링</h4>
-              <p className="text-on-surface-variant font-body">간단한 키워드만으로 풍부하고 교훈적인 이야기를 생성합니다.</p>
+              <p className="text-on-surface-variant font-body">간단한 키워드만으로 풍부하고 교훈적인 이야기를 생성해요.</p>
             </div>
             <div className="space-y-4 p-8 rounded-3xl glass-card border border-white/20">
               <div className="w-16 h-16 bg-secondary/10 rounded-2xl flex items-center justify-center text-secondary">
                 <Palette size={32} />
               </div>
               <h4 className="text-2xl font-headline font-bold text-on-surface">마법 수채화</h4>
-              <p className="text-on-surface-variant font-body">수채화부터 유화까지, AI가 그리는 마법 같은 일러스트레이션.</p>
+              <p className="text-on-surface-variant font-body">수채화부터 유화까지, AI가 그리는 마법 같은 일러스트레이션이에요.</p>
             </div>
             <div className="space-y-4 p-8 rounded-3xl glass-card border border-white/20">
               <div className="w-16 h-16 bg-tertiary/10 rounded-2xl flex items-center justify-center text-tertiary">
                 <BookOpen size={32} />
               </div>
               <h4 className="text-2xl font-headline font-bold text-on-surface">실물 도서 제작</h4>
-              <p className="text-on-surface-variant font-body">디지털을 넘어 실제 하드커버 책으로 간직할 수 있습니다.</p>
+              <p className="text-on-surface-variant font-body">디지털을 넘어 실제 하드커버 책으로 간직할 수 있어요.</p>
             </div>
           </div>
         </div>

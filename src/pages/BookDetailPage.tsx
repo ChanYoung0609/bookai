@@ -69,14 +69,14 @@ const BookDetailPage = () => {
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-2xl font-bold">이야기 소개</h3>
+            <h3 className="text-2xl font-bold">이야기 소개예요</h3>
             <p className="text-on-surface-variant leading-relaxed text-base md:text-lg">
               {book.description}
             </p>
           </div>
 
           <div className="space-y-6 pt-8 border-t border-on-surface-variant/10">
-            <h3 className="text-2xl font-bold">커뮤니티 피드백</h3>
+            <h3 className="text-2xl font-bold">커뮤니티 피드백이에요</h3>
             <div className="space-y-6">
               {book.reviews.map(review => (
                 <div key={review.id} className="space-y-3">

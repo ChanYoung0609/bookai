@@ -45,7 +45,7 @@ const WizardPage = () => {
           {step === 1 && (
             <>
               <div className="space-y-2">
-                <h2 className="text-3xl md:text-4xl font-display font-bold">아이디어를 현실로 만드세요</h2>
+                <h2 className="text-3xl md:text-4xl font-display font-bold">아이디어를 현실로 만들어보세요</h2>
                 <p className="text-on-surface-variant text-sm md:text-base">만들고 싶은 세계에 대해 알려주세요.</p>
               </div>
 
@@ -113,8 +113,8 @@ const WizardPage = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <h3 className="text-2xl md:text-3xl font-display font-bold">마법을 엮는 중...</h3>
-                <p className="text-on-surface-variant text-sm md:text-base">AI가 당신만의 독특한 이야기를 만들고 일러스트를 그리고 있습니다.</p>
+                <h3 className="text-2xl md:text-3xl font-display font-bold">마법을 엮는 중이에요...</h3>
+                <p className="text-on-surface-variant text-sm md:text-base">AI가 당신만의 독특한 이야기를 만들고 일러스트를 그리고 있어요.</p>
               </div>
               <button onClick={() => setStep(3)} className="text-primary font-bold hover:underline text-sm">건너뛰기 (데모)</button>
             </div>

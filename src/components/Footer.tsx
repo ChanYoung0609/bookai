@@ -13,7 +13,7 @@ const Footer = () => {
           <Link className="hover:text-primary transition-colors" to="#">문의하기</Link>
         </div>
         <div className="text-sm font-body text-on-surface/70">
-          © 2026 StoryMagic. 어린 꿈나무들을 위해 만들어졌습니다.
+          © 2026 StoryMagic. 어린 꿈나무들을 위해 만들어졌어요.
         </div>
       </div>
     </footer>

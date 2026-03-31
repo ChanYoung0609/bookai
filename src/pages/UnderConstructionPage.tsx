@@ -38,7 +38,7 @@ const UnderConstructionPage = () => {
         {/* Text Content */}
         <div className="space-y-4">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight font-serif italic text-primary">
-            페이지 준비 중입니다
+            페이지 준비 중이에요
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
             더 멋진 경험을 위해 열심히 작업하고 있어요.<br />

@@ -63,7 +63,7 @@ const LoginPage = () => {
           {/* Login Card */}
           <div className="glass-card rounded-xl p-8 md:p-10 shadow-[0px_20px_40px_rgba(39,48,87,0.06)] border border-white/20">
             <div className="text-center mb-8">
-              <h1 className="font-headline text-3xl font-extrabold text-on-surface tracking-tight mb-2">다시 오신 것을 환영합니다</h1>
+              <h1 className="font-headline text-3xl font-extrabold text-on-surface tracking-tight mb-2">다시 오신 것을 환영해요</h1>
               <p className="text-on-surface-variant text-sm font-medium">마법 같은 이야기를 계속 만들어보세요</p>
             </div>
             

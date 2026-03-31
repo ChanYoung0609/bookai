@@ -29,7 +29,7 @@ const ProfilePage = () => {
           <div className="flex-1 text-center md:text-left space-y-4">
             <div className="space-y-1">
               <h1 className="text-3xl md:text-4xl font-display font-bold">장찬영</h1>
-              <p className="text-on-surface-variant font-medium text-sm md:text-base">2024년부터 활동 중인 마법의 이야기꾼</p>
+              <p className="text-on-surface-variant font-medium text-sm md:text-base">2024년부터 활동 중인 마법의 이야기꾼이에요</p>
             </div>
             <div className="flex flex-wrap justify-center md:justify-start gap-6 md:gap-8 pt-4">
               <div className="text-center">

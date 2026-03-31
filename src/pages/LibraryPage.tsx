@@ -22,7 +22,7 @@ const LibraryPage = () => {
               <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 2 }}>
                 <Sparkles size={24} className="text-primary" />
               </motion.div>
-              제작 중
+              제작 중이에요
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <div className="glass p-4 md:p-6 rounded-3xl flex gap-4 md:gap-6 items-center">
@@ -49,7 +49,7 @@ const LibraryPage = () => {
           </section>
 
           <section className="space-y-6">
-            <h3 className="text-xl md:text-2xl font-bold">완성된 작품</h3>
+            <h3 className="text-xl md:text-2xl font-bold">완성된 작품이에요</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
               {MOCK_BOOKS.map(book => (
                 <Link key={book.id} to={`/book/${book.id}`} className="group">

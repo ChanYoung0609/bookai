@@ -63,7 +63,7 @@ const ReadingPage = () => {
                 className="space-y-4 md:space-y-8"
               >
                 <p className="text-xl md:text-3xl font-display leading-relaxed text-on-surface">
-                  {book.pages[currentPage]?.text || "이야기가 여기서 시작됩니다..."}
+                  {book.pages[currentPage]?.text || "이야기가 여기서 시작돼요..."}
                 </p>
                 
                 <div className="pt-4 md:pt-12 space-y-2 md:space-y-4">

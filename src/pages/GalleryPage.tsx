@@ -15,10 +15,10 @@ const GalleryPage = () => {
           <div className="space-y-4">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold leading-tight">
               무한한 세계, <br />
-              <span className="text-primary italic">한 페이지씩</span> 완성됩니다
+              <span className="text-primary italic">한 페이지씩</span> 완성돼요
             </h1>
             <p className="text-on-surface-variant text-base md:text-lg max-w-xl">
-              우리 커뮤니티가 만든 수천 개의 AI 생성 이야기를 만나보세요. 깊은 우주부터 마법의 숲까지.
+              우리 커뮤니티가 만든 수천 개의 AI 생성 이야기를 만나보세요. 깊은 우주부터 마법의 숲까지 준비되어 있어요.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

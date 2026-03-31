@@ -74,7 +74,7 @@ const SignUpPage = () => {
         >
           <div className="glass-card rounded-xl p-8 md:p-10 shadow-[0px_20px_40px_rgba(39,48,87,0.06)] border border-white/20">
             <div className="text-center mb-8">
-              <h1 className="font-headline text-3xl font-extrabold text-on-surface tracking-tight mb-2">새로운 모험 시작하기</h1>
+              <h1 className="font-headline text-3xl font-extrabold text-on-surface tracking-tight mb-2">새로운 모험을 시작해보세요</h1>
               <p className="text-on-surface-variant text-sm font-medium">당신만의 마법 같은 이야기를 만들어보세요</p>
             </div>
             
