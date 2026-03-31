@@ -18,7 +18,7 @@ import SignUpPage from "./pages/SignUpPage";
 import UnderConstructionPage from "./pages/UnderConstructionPage";
 import AboutPage from "./pages/AboutPage";
 
-// --- Main App ---
+// --- Main App --- 흐아아아
 
 export default function App() {
   return (
