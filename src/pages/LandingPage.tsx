@@ -59,7 +59,7 @@ const LandingPage = () => {
             <Sparkles size={16} />
             AI 기반 스토리텔링
           </div>
-          <h1 className="text-4xl md:text-6xl lg:text-8xl font-headline font-extrabold leading-[1.1] md:leading-[0.9] max-w-4xl mx-auto text-on-surface tracking-tight">
+          <h1 className="text-4xl md:text-6xl lg:text-8xl font-headline font-extrabold leading-tight md:leading-tight max-w-4xl mx-auto text-on-surface tracking-tight">
             AI로 당신만의 <span className="text-primary italic">마법 같은</span> 동화책을 만들어보세요
           </h1>
           <p className="text-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto font-body font-medium">
