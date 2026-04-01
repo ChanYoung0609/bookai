@@ -1,9 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Rocket, PawPrint, Search, Wand2 } from "lucide-react";
 import { cn } from "../lib/utils";
-import { STYLES } from "../constants";
+import { STYLES, STORY_TEMPLATES } from "../constants";
 import { IllustrationStyle, StoryWizardState } from "../types";
 
 const WizardPage = () => {
@@ -14,6 +14,25 @@ const WizardPage = () => {
     prompt: '',
     title: ''
   });
+
+  const getTemplateIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'Sparkles': return <Sparkles size={18} />;
+      case 'Rocket': return <Rocket size={18} />;
+      case 'PawPrint': return <PawPrint size={18} />;
+      case 'Search': return <Search size={18} />;
+      default: return <Wand2 size={18} />;
+    }
+  };
+
+  const applyTemplate = (template: typeof STORY_TEMPLATES[0]) => {
+    setState({
+      ...state,
+      prompt: template.prompt,
+      style: template.style as IllustrationStyle,
+      title: template.title
+    });
+  };
 
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6 magical-gradient">
@@ -81,6 +100,35 @@ const WizardPage = () => {
               </div>
 
               <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">추천 템플릿</label>
+                  <span className="text-[10px] text-primary font-bold uppercase tracking-widest">아이디어를 골라보세요</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {STORY_TEMPLATES.map(template => (
+                    <button
+                      key={template.id}
+                      onClick={() => applyTemplate(template)}
+                      className={cn(
+                        "p-4 rounded-2xl flex flex-col items-center gap-2 transition-all border-2",
+                        state.prompt === template.prompt 
+                          ? "bg-primary/10 border-primary text-primary shadow-sm" 
+                          : "bg-surface-container-low border-transparent hover:border-primary/30"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center",
+                        state.prompt === template.prompt ? "bg-primary text-white" : "bg-white text-on-surface-variant"
+                      )}>
+                        {getTemplateIcon(template.icon)}
+                      </div>
+                      <span className="text-xs font-bold">{template.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
                 <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">스토리 프롬프트</label>
                 <textarea 
                   placeholder="예: 구름 속에 숨겨진 도시를 발견하는 용감한 작은 다람쥐 이야기..."
@@ -132,7 +180,7 @@ const WizardPage = () => {
                 </div>
               </div>
               <div className="p-4 md:p-6 bg-surface-container-low rounded-2xl">
-                <p className="italic text-on-surface-variant text-sm md:text-base leading-relaxed">"거대한 참나무의 가장 높은 가지에, 구름을 만지는 꿈을 꾸는 너티라는 다람쥐가 살고 있었어요. 어느 날, 하늘에서 황금 잎사귀가 떨어졌어요..."</p>
+                <p className="italic text-on-surface-variant text-sm md:text-base leading-relaxed">"거대한 참나무의 가장 높은 가지에, 구름을 만지는 꿈을 꾸는 너티라는 다람쥐가 살고 있었습니다. 어느 날, 하늘에서 황금 잎사귀가 떨어졌습니다..."</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
                 <button onClick={() => setStep(1)} className="flex-1 glass py-4 md:py-5 rounded-2xl font-bold text-sm md:text-base">컨셉 수정</button>

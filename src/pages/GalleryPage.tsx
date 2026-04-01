@@ -48,26 +48,43 @@ const GalleryPage = () => {
               transition={{ delay: i * 0.1 }}
               className="group cursor-pointer"
             >
-              <Link to={`/book/${book.id}`}>
-                <div className="relative aspect-[3/4] rounded-2xl overflow-hidden book-shadow mb-4 group-hover:-translate-y-2 transition-transform duration-500">
+              <Link to={`/book/${book.id}`} className="flex flex-row sm:flex-col gap-4 sm:gap-0">
+                <div className="relative w-1/3 sm:w-full aspect-[3/4] rounded-2xl overflow-hidden book-shadow sm:mb-4 group-hover:-translate-y-2 transition-transform duration-500 flex-shrink-0">
                   <img src={book.coverUrl} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                  <div className="absolute top-4 right-4 glass rounded-full px-3 py-1 flex items-center gap-1 text-xs font-bold">
-                    <Star size={12} className="text-yellow-500 fill-yellow-500" />
+                  <div className="absolute top-2 right-2 sm:top-4 sm:right-4 glass rounded-full px-2 py-0.5 sm:px-3 sm:py-1 flex items-center gap-1 text-[10px] sm:text-xs font-bold">
+                    <Star size={10} className="text-yellow-500 fill-yellow-500 sm:w-3 sm:h-3" />
                     {book.rating}
                   </div>
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
                     <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary scale-0 group-hover:scale-100 transition-transform duration-500">
                       <BookOpen size={32} />
                     </div>
                   </div>
                 </div>
-                <h3 className="text-lg md:text-xl font-bold group-hover:text-primary transition-colors">{book.title}</h3>
-                <p className="text-on-surface-variant text-sm font-medium">{book.author} 작가</p>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-primary/60">{book.category}</span>
-                  <div className="flex items-center gap-1 text-on-surface-variant">
-                    <Heart size={14} />
-                    <span className="text-xs font-bold">{book.likes}</span>
+                
+                <div className="flex flex-col justify-center sm:justify-start flex-grow min-w-0">
+                  <div className="flex items-center gap-2 mb-1 sm:hidden">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary/60">{book.category}</span>
+                    <div className="flex items-center gap-1 text-on-surface-variant">
+                      <Heart size={10} />
+                      <span className="text-[10px] font-bold">{book.likes}</span>
+                    </div>
+                  </div>
+                  
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold group-hover:text-primary transition-colors truncate sm:whitespace-normal">{book.title}</h3>
+                  <p className="text-on-surface-variant text-xs sm:text-sm font-medium mb-2">{book.author} 작가</p>
+                  
+                  {/* 모바일에서만 보이는 소개글 */}
+                  <p className="text-on-surface-variant text-[11px] leading-relaxed line-clamp-2 mb-2 sm:hidden">
+                    {book.description}
+                  </p>
+                  
+                  <div className="hidden sm:flex items-center justify-between mt-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-primary/60">{book.category}</span>
+                    <div className="flex items-center gap-1 text-on-surface-variant">
+                      <Heart size={14} />
+                      <span className="text-xs font-bold">{book.likes}</span>
+                    </div>
                   </div>
                 </div>
               </Link>
