@@ -3,27 +3,28 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Search, BookPlus, BookOpen, Menu, X, LogIn, Compass, Library, User as UserIcon, Home } from "lucide-react";
 import { cn } from "../lib/utils";
 import { motion, AnimatePresence } from "motion/react";
+import { isLoggedIn as checkAuth, fetchUserMe, type UserInfo } from "../lib/auth";
 
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<UserInfo | null>(null);
   const isReading = location.pathname.startsWith('/read');
 
   useEffect(() => {
-    const checkToken = () => {
-      const hasToken = document.cookie.split(';').some((item) => item.trim().startsWith('token='));
-      setIsLoggedIn(hasToken);
-    };
-
-    checkToken();
+    const loggedIn = checkAuth();
+    setIsLoggedIn(loggedIn);
+    if (loggedIn) {
+      fetchUserMe().then(setUser);
+    } else {
+      setUser(null);
+    }
   }, [location]);
 
   const handleProtectedClick = (e: React.MouseEvent, target: string) => {
     e.preventDefault();
-    const hasToken = document.cookie.split(';').some((item) => item.trim().startsWith('token='));
-    
-    if (!hasToken) {
+    if (!checkAuth()) {
       if (window.confirm("로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?")) {
         navigate("/login");
       }
@@ -75,7 +76,7 @@ const Navbar = () => {
             <div className="flex items-center gap-4">
               {isLoggedIn ? (
                 <Link to="/profile" className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 hover:border-primary transition-colors">
-                  <img src="https://i.pravatar.cc/150?u=jang" alt="프로필" className="w-full h-full object-cover" />
+                  <img src={user?.profileImage || "https://i.pravatar.cc/150?u=default"} alt="프로필" className="w-full h-full object-cover" />
                 </Link>
               ) : (
                 <Link 

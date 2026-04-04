@@ -17,6 +17,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ProfileEditPage from "./pages/ProfileEditPage";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
+import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import UnderConstructionPage from "./pages/UnderConstructionPage";
 import AboutPage from "./pages/AboutPage";
 
@@ -39,6 +40,7 @@ export default function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/edit" element={<ProfileEditPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/coming-soon" element={<UnderConstructionPage />} />

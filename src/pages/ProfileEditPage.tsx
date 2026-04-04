@@ -1,24 +1,56 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { Camera, User, ArrowLeft, Save, Mail } from "lucide-react";
+import { fetchUserMe, fetchWithAuth, isLoggedIn, type UserInfo } from "../lib/auth";
 
 const ProfileEditPage = () => {
   const navigate = useNavigate();
-  const [name, setName] = useState("장찬영");
-  const [email, setEmail] = useState("jangchanyoung510@gmail.com");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [profileImage, setProfileImage] = useState("");
+  const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      navigate("/login");
+      return;
+    }
+    fetchUserMe().then((data) => {
+      if (data) {
+        setName(data.nickname);
+        setEmail(data.email);
+        setProfileImage(data.profileImage);
+      }
+      setLoading(false);
+    });
+  }, [navigate]);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    
-    // Mock save delay
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      await fetchWithAuth('/api/user/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname: name, email }),
+      });
       navigate("/profile");
-    }, 1000);
+    } catch {
+      alert("저장에 실패했습니다.");
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6 bg-surface">

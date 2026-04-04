@@ -1,18 +1,38 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { Palette, Heart, ChevronRight, Globe, FileText, LogOut, Settings } from "lucide-react";
 import { MOCK_BOOKS } from "../constants";
+import { logout, fetchUserMe, isLoggedIn, type UserInfo } from "../lib/auth";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState<UserInfo | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleLogout = () => {
-    // Clear cookie
-    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      navigate("/login");
+      return;
+    }
+    fetchUserMe().then((data) => {
+      setUser(data);
+      setLoading(false);
+    });
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    await logout();
     navigate("/");
-    window.location.reload();
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6">
@@ -20,7 +40,7 @@ const ProfilePage = () => {
         <div className="glass p-6 md:p-12 rounded-3xl flex flex-col md:flex-row items-center gap-8 md:gap-10">
           <div className="relative">
             <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-primary shadow-2xl flex-shrink-0">
-              <img src="https://i.pravatar.cc/150?u=jang" alt="프로필" className="w-full h-full object-cover" />
+              <img src={user?.profileImage || "https://i.pravatar.cc/150?u=default"} alt="프로필" className="w-full h-full object-cover" />
             </div>
             <button className="absolute bottom-1 right-1 md:bottom-2 md:right-2 w-8 h-8 md:w-10 md:h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-primary hover:scale-110 transition-transform">
               <Palette size={18} className="md:w-5 md:h-5" />
@@ -28,8 +48,8 @@ const ProfilePage = () => {
           </div>
           <div className="flex-1 text-center md:text-left space-y-4">
             <div className="space-y-1">
-              <h1 className="text-3xl md:text-4xl font-display font-bold">장찬영</h1>
-              <p className="text-on-surface-variant font-medium text-sm md:text-base">2024년부터 활동 중인 마법의 이야기꾼이에요</p>
+              <h1 className="text-3xl md:text-4xl font-display font-bold">{user?.nickname || "사용자"}</h1>
+              <p className="text-on-surface-variant font-medium text-sm md:text-base">{user?.email}</p>
             </div>
             <div className="flex flex-wrap justify-center md:justify-start gap-6 md:gap-8 pt-4">
               <div className="text-center">
