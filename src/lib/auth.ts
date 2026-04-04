@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://mongle.cloud' || 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mongle.cloud';
 
 // ── 유저 타입 ──
 
