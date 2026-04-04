@@ -37,40 +37,22 @@ const WizardPage = () => {
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6 magical-gradient">
       <div className="max-w-4xl mx-auto">
-<<<<<<< HEAD
         <div className="flex items-center justify-between mb-8 md:mb-12 max-w-2xl mx-auto px-2">
           {[1, 2, 3].map(s => (
             <React.Fragment key={s}>
               <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
                 <div className={cn(
                   "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold transition-all text-sm md:text-base",
-                  step === s ? "bg-primary text-white scale-110 shadow-lg" : 
-=======
-        <div className="flex items-center mb-8 md:mb-12">
-          {[1, 2, 3].map(s => (
-            <React.Fragment key={s}>
-              <div className="flex flex-col items-center gap-1.5 md:gap-2">
-                <div className={cn(
-                  "w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold transition-all text-sm md:text-base",
                   step === s ? "bg-primary text-white scale-110 shadow-lg" :
->>>>>>> 39ee693 (feat: 로그인 연결)
                   step > s ? "bg-green-500 text-white" : "glass text-on-surface-variant"
                 )}>
                   {s}
                 </div>
-<<<<<<< HEAD
                 <span className={cn("font-bold text-xs md:text-sm uppercase tracking-widest", step === s ? "text-primary" : "text-on-surface-variant")}>
                   {s === 1 ? "컨셉" : s === 2 ? "스토리" : "검토"}
                 </span>
               </div>
               {s < 3 && <div className="flex-1 h-[2px] bg-on-surface-variant/20 mx-2 md:mx-6" />}
-=======
-                <span className={cn("font-bold text-[10px] md:text-sm uppercase tracking-widest", step === s ? "text-primary" : "text-on-surface-variant")}>
-                  {s === 1 ? "컨셉" : s === 2 ? "스토리" : "검토"}
-                </span>
-              </div>
-              {s < 3 && <div className="flex-1 h-[2px] bg-on-surface-variant/10 mx-3 md:mx-6 mb-5 md:mb-6" />}
->>>>>>> 39ee693 (feat: 로그인 연결)
             </React.Fragment>
           ))}
         </div>
