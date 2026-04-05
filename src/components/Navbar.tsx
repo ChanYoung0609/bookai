@@ -118,7 +118,7 @@ const Navbar = () => {
           {isLoggedIn ? (
             <Link to="/profile" className={cn("flex flex-col items-center gap-1 transition-colors", location.pathname === "/profile" ? "text-primary" : "text-on-surface-variant")}>
               <div className={cn("w-5 h-5 rounded-full overflow-hidden border", location.pathname === "/profile" ? "border-primary" : "border-on-surface-variant")}>
-                <img src="https://i.pravatar.cc/150?u=jang" alt="프로필" className="w-full h-full object-cover" />
+                <img src={user?.profileImage || "https://i.pravatar.cc/150?u=default"} alt="프로필" className="w-full h-full object-cover" />
               </div>
               <span className="text-[10px] font-bold">마이</span>
             </Link>
