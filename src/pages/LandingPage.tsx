@@ -60,7 +60,7 @@ const LandingPage = () => {
             AI 기반 스토리텔링
           </div>
           <h1 className="text-4xl md:text-6xl lg:text-8xl font-headline font-extrabold leading-tight md:leading-tight max-w-4xl mx-auto text-on-surface tracking-tight">
-            AI로 당신만의 <br /> <span className="text-primary italic">마법 같은</span> 동화책을 만들어보세요
+            AI로 당신만의 <br /> <span className="text-primary italic">마법 같은</span> 동화책을 <br />만들어보세요
           </h1>
           <p className="text-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto font-body font-medium">
             아이의 상상력이 현실이 되는 공간이에요. 몇 번의 클릭만으로 고퀄리티 일러스트와 함께 나만의 이야기를 완성해보세요.
