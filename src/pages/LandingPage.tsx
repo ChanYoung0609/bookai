@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { Sparkles, Palette, BookOpen } from "lucide-react";
+import { isLoggedIn } from "../lib/auth";
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -32,9 +33,7 @@ const LandingPage = () => {
 
   const handleCreateClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    const hasToken = document.cookie.split(';').some((item) => item.trim().startsWith('token='));
-    
-    if (!hasToken) {
+    if (!isLoggedIn()) {
       if (window.confirm("로그인이 필요한 서비스입니다. 로그인 페이지로 이동하시겠습니까?")) {
         navigate("/login");
       }

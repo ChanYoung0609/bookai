@@ -51,9 +51,6 @@ const SignUpPage = () => {
       return;
     }
 
-    // Demo: Set a mock token in cookies
-    document.cookie = "token=mock_token; path=/; max-age=3600";
-    
     // Trigger Success State
     setIsSuccess(true);
     

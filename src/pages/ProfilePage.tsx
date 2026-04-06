@@ -16,6 +16,10 @@ const ProfilePage = () => {
       return;
     }
     fetchUserMe().then((data) => {
+      if (!data) {
+        navigate("/login");
+        return;
+      }
       setUser(data);
       setLoading(false);
     });

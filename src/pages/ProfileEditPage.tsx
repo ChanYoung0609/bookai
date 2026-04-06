@@ -18,11 +18,13 @@ const ProfileEditPage = () => {
       return;
     }
     fetchUserMe().then((data) => {
-      if (data) {
-        setName(data.nickname);
-        setEmail(data.email);
-        setProfileImage(data.profileImage);
+      if (!data) {
+        navigate("/login");
+        return;
       }
+      setName(data.nickname);
+      setEmail(data.email);
+      setProfileImage(data.profileImage);
       setLoading(false);
     });
   }, [navigate]);

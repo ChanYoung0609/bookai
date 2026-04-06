@@ -48,6 +48,8 @@ export async function logout(): Promise<void> {
   }
   removeAccessToken();
   clearUserCache();
+  // 잔여 쿠키 정리
+  document.cookie = "token=; path=/; max-age=0";
 }
 
 // ── 토큰 갱신 ──
