@@ -97,7 +97,7 @@ const LandingPage = () => {
                 <Link
                   to={`/book/${book.bookId}`}
                   key={book.bookId}
-                  className="group relative aspect-[3/4] w-[60vw] sm:w-[40vw] md:w-[calc((100%-2.5rem)/3)] shrink-0 snap-center rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 hover:-translate-y-2 transition-transform duration-300"
+                  className="group relative aspect-[3/4] w-[60vw] sm:w-[40vw] md:w-[calc((100%-3.75rem)/4)] shrink-0 snap-center rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 hover:-translate-y-2 transition-transform duration-300"
                 >
                   <img
                     src={book.coverImageUrl}
