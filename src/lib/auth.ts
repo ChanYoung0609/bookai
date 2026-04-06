@@ -64,9 +64,9 @@ export async function refreshAccessToken(): Promise<string | null> {
     if (!res.ok) return null;
 
     const data = await res.json();
-    if (data.success && data.data) {
-      setAccessToken(data.data);
-      return data.data;
+    if (data.success && data.data?.accessToken) {
+      setAccessToken(data.data.accessToken);
+      return data.data.accessToken;
     }
     return null;
   } catch {
