@@ -78,13 +78,13 @@ const LandingPage = () => {
           >
             <button
               onClick={() => scroll("left")}
-              className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur rounded-full shadow-lg flex items-center justify-center text-primary hover:bg-white hover:scale-110 transition-all"
+              className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-transparent rounded-full flex items-center justify-center text-primary/30 hover:bg-white/90 hover:shadow-lg hover:text-primary hover:scale-110 transition-all"
             >
               <ChevronLeft size={24} />
             </button>
             <button
               onClick={() => scroll("right")}
-              className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-white/90 backdrop-blur rounded-full shadow-lg flex items-center justify-center text-primary hover:bg-white hover:scale-110 transition-all"
+              className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 bg-transparent rounded-full flex items-center justify-center text-primary/30 hover:bg-white/90 hover:shadow-lg hover:text-primary hover:scale-110 transition-all"
             >
               <ChevronRight size={24} />
             </button>
