@@ -43,7 +43,7 @@ const ReadingPage = () => {
 
   return (
     <div className="h-screen bg-on-surface flex flex-col overflow-hidden">
-      <div className="p-4 md:p-6 flex items-center justify-between text-white/60">
+      <div className="px-4 py-2 md:px-6 md:py-3 flex items-center justify-between text-white/60">
         <Link to={`/book/${book.bookId}`} className="flex items-center gap-2 hover:text-white transition-colors">
           <ChevronLeft size={24} />
           <span className="hidden sm:inline font-bold">상세 페이지로</span>
@@ -58,8 +58,8 @@ const ReadingPage = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-4 md:p-12">
-        <div className="w-full max-w-7xl aspect-[1/1.5] md:aspect-[2/1] flex flex-col md:flex-row gap-1 bg-white rounded-3xl overflow-hidden shadow-2xl">
+      <div className="flex-1 flex items-center justify-center p-2 md:p-6">
+        <div className="w-full max-w-[95vw] md:max-w-[90vw] h-full max-h-full aspect-auto md:aspect-[2/1] flex flex-col md:flex-row gap-1 bg-white rounded-3xl overflow-hidden shadow-2xl">
           {/* Page: Illustration (Top on mobile, Left on desktop) */}
           <div className="flex-1 relative h-1/2 md:h-full">
             <AnimatePresence mode="wait">
