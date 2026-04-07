@@ -23,3 +23,30 @@ export async function fetchBooks(page: number, size: number): Promise<PageRespon
   const json = await res.json();
   return json.data;
 }
+
+export interface BookDetailPage {
+  pageNumber: number;
+  content: string;
+}
+
+export interface BookDetailCharacter {
+  name: string;
+  description: string;
+}
+
+export interface BookDetail {
+  bookId: string;
+  title: string;
+  description: string;
+  authorName: string;
+  coverImageUrl: string;
+  pages: BookDetailPage[];
+  characters: BookDetailCharacter[];
+}
+
+export async function fetchBookDetail(bookId: string): Promise<BookDetail> {
+  const res = await fetch(`${API_BASE_URL}/api/books/${bookId}`);
+  if (!res.ok) throw new Error('Failed to fetch book detail');
+  const json = await res.json();
+  return json.data;
+}
