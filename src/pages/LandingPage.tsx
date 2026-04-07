@@ -14,17 +14,41 @@ const LandingPage = () => {
     fetchBooks(0, 6).then((data) => setBooks(data.content)).catch(() => {});
   }, []);
 
-  // 무한 슬라이드를 위해 아이템을 3배로 복제
+  // 무한 슬라이드: 3배 복제
   const displayBooks = books.length > 0 ? [...books, ...books, ...books] : [];
 
   // 초기 스크롤 위치를 중간(2번째 세트)으로 설정
   useEffect(() => {
-    if (sliderRef.current && books.length > 0) {
-      requestAnimationFrame(() => {
-        if (!sliderRef.current) return;
-        sliderRef.current.scrollLeft = sliderRef.current.scrollWidth / 3;
-      });
-    }
+    const slider = sliderRef.current;
+    if (!slider || books.length === 0) return;
+    slider.scrollLeft = slider.scrollWidth / 3;
+  }, [books]);
+
+  // 스크롤이 끝나면 경계에서 즉시 위치 리셋 (무한 루프)
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider || books.length === 0) return;
+
+    let timeout: ReturnType<typeof setTimeout>;
+    const onScrollEnd = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        const { scrollLeft, scrollWidth } = slider;
+        const section = scrollWidth / 3;
+
+        if (scrollLeft < section * 0.5) {
+          slider.scrollLeft += section;
+        } else if (scrollLeft > section * 1.5) {
+          slider.scrollLeft -= section;
+        }
+      }, 80);
+    };
+
+    slider.addEventListener("scroll", onScrollEnd);
+    return () => {
+      slider.removeEventListener("scroll", onScrollEnd);
+      clearTimeout(timeout);
+    };
   }, [books]);
 
   const handleCreateClick = (e: React.MouseEvent) => {
@@ -45,19 +69,6 @@ const LandingPage = () => {
       left: direction === "left" ? -scrollAmount : scrollAmount,
       behavior: "smooth",
     });
-
-    // 스크롤 애니메이션 완료 후 위치 리셋 (무한 루프 효과)
-    setTimeout(() => {
-      if (!sliderRef.current) return;
-      const { scrollLeft, scrollWidth } = sliderRef.current;
-      const sectionWidth = scrollWidth / 3;
-
-      if (scrollLeft < sectionWidth * 0.3) {
-        sliderRef.current.scrollLeft += sectionWidth;
-      } else if (scrollLeft > sectionWidth * 1.7) {
-        sliderRef.current.scrollLeft -= sectionWidth;
-      }
-    }, 500);
   };
 
   return (
@@ -117,13 +128,13 @@ const LandingPage = () => {
 
             <div
               ref={sliderRef}
-              className="flex gap-5 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+              className="flex gap-5 overflow-x-auto pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
             >
               {displayBooks.map((book, index) => (
                 <Link
                   to={`/book/${book.bookId}`}
                   key={`${book.bookId}-${index}`}
-                  className="group relative aspect-[3/4] w-[60vw] sm:w-[40vw] md:w-[calc((100%-3.75rem)/4)] shrink-0 snap-center rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 hover:-translate-y-2 transition-transform duration-300"
+                  className="group relative aspect-[3/4] w-[60vw] sm:w-[40vw] md:w-[calc((100%-3.75rem)/4)] shrink-0 rounded-3xl overflow-hidden shadow-2xl border-4 border-white/50 hover:-translate-y-2 transition-transform duration-300"
                 >
                   <img
                     src={book.coverImageUrl}
