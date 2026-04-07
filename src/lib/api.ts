@@ -27,6 +27,7 @@ export async function fetchBooks(page: number, size: number): Promise<PageRespon
 export interface BookDetailPage {
   pageNumber: number;
   content: string;
+  imageUrl?: string;
 }
 
 export interface BookDetailCharacter {

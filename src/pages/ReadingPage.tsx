@@ -1,23 +1,56 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronLeft, ChevronRight, Settings, Info, Sparkles } from "lucide-react";
-import { MOCK_BOOKS } from "../constants";
+import { fetchBookDetail, type BookDetail } from "../lib/api";
 
 const ReadingPage = () => {
-  const [currentPage, setCurrentPage] = React.useState(0);
-  const book = MOCK_BOOKS[0];
+  const { id } = useParams<{ id: string }>();
+  const [currentPage, setCurrentPage] = useState(0);
+  const [book, setBook] = useState<BookDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    fetchBookDetail(id)
+      .then((data) => setBook(data))
+      .catch(() => setError(true))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="h-screen bg-on-surface flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !book || book.pages.length === 0) {
+    return (
+      <div className="h-screen bg-on-surface flex flex-col items-center justify-center gap-4">
+        <p className="text-white/60 text-lg">
+          {book?.pages.length === 0 ? "아직 페이지가 없습니다." : "책을 불러올 수 없습니다."}
+        </p>
+        <Link to="/explore" className="text-primary font-bold hover:underline">
+          목록으로 돌아가기
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen bg-on-surface flex flex-col overflow-hidden">
       <div className="p-4 md:p-6 flex items-center justify-between text-white/60">
-        <Link to={`/book/${book.id}`} className="flex items-center gap-2 hover:text-white transition-colors">
+        <Link to={`/book/${book.bookId}`} className="flex items-center gap-2 hover:text-white transition-colors">
           <ChevronLeft size={24} />
           <span className="hidden sm:inline font-bold">상세 페이지로</span>
         </Link>
         <div className="flex flex-col items-center">
           <h2 className="text-white font-display font-bold text-lg md:text-xl text-center truncate max-w-[200px] md:max-w-md">{book.title}</h2>
-          <p className="text-[10px] md:text-xs uppercase tracking-widest font-bold">제 1장: 깨어남</p>
+          <p className="text-[10px] md:text-xs uppercase tracking-widest font-bold">{book.pages[currentPage].pageNumber} 페이지</p>
         </div>
         <div className="flex items-center gap-2 md:gap-4">
           <button className="p-2 hover:text-white transition-colors"><Settings size={20} /></button>
@@ -30,20 +63,20 @@ const ReadingPage = () => {
           {/* Page: Illustration (Top on mobile, Left on desktop) */}
           <div className="flex-1 relative h-1/2 md:h-full">
             <AnimatePresence mode="wait">
-              <motion.img 
+              <motion.img
                 key={currentPage}
                 initial={{ opacity: 0, scale: 1.1 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.8 }}
-                src={book.pages[currentPage]?.imageUrl || book.coverUrl} 
-                alt="페이지 일러스트" 
+                src={book.pages[currentPage].imageUrl || book.coverImageUrl}
+                alt="페이지 일러스트"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
             </AnimatePresence>
             <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8 glass px-4 py-2 rounded-full text-[10px] md:text-xs font-bold">
-              {currentPage + 1} 페이지
+              {book.pages[currentPage].pageNumber} 페이지
             </div>
           </div>
 
@@ -52,7 +85,7 @@ const ReadingPage = () => {
             <div className="absolute top-4 right-4 md:top-8 md:right-8 text-primary/20">
               <Sparkles size={32} className="md:w-12 md:h-12" />
             </div>
-            
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentPage}
@@ -63,23 +96,13 @@ const ReadingPage = () => {
                 className="space-y-4 md:space-y-8"
               >
                 <p className="text-xl md:text-3xl font-display leading-relaxed text-on-surface">
-                  {book.pages[currentPage]?.text || "이야기가 여기서 시작돼요..."}
+                  {book.pages[currentPage].content}
                 </p>
-                
-                <div className="pt-4 md:pt-12 space-y-2 md:space-y-4">
-                  <div className="flex items-center gap-2 text-primary font-bold text-xs md:text-sm">
-                    <Sparkles size={16} />
-                    마법 팁
-                  </div>
-                  <p className="text-sm md:text-base text-on-surface-variant italic">
-                    "버드나무가 살아 움직이는 것처럼 부드럽고 속삭이는 목소리로 이 부분을 읽어보세요!"
-                  </p>
-                </div>
               </motion.div>
             </AnimatePresence>
 
             <div className="absolute bottom-6 left-6 right-6 md:bottom-16 md:left-16 md:right-16 flex items-center justify-between">
-              <button 
+              <button
                 onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
                 disabled={currentPage === 0}
                 className="w-10 h-10 md:w-14 md:h-14 rounded-full glass flex items-center justify-center hover:bg-white transition-all disabled:opacity-30"
@@ -87,13 +110,13 @@ const ReadingPage = () => {
                 <ChevronLeft size={20} className="md:w-6 md:h-6" />
               </button>
               <div className="flex-1 mx-4 md:mx-8 h-1 bg-on-surface-variant/10 rounded-full overflow-hidden">
-                <motion.div 
-                  className="h-full bg-primary" 
+                <motion.div
+                  className="h-full bg-primary"
                   initial={false}
                   animate={{ width: `${((currentPage + 1) / book.pages.length) * 100}%` }}
                 />
               </div>
-              <button 
+              <button
                 onClick={() => setCurrentPage(prev => Math.min(book.pages.length - 1, prev + 1))}
                 disabled={currentPage === book.pages.length - 1}
                 className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-primary text-white flex items-center justify-center hover:bg-secondary transition-all disabled:opacity-30"
