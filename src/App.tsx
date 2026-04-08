@@ -24,7 +24,6 @@ import HomePage from "./pages/HomePage";
 import DashboardPage from "./pages/DashboardPage";
 import AuthorDashboardPage from "./pages/AuthorDashboardPage";
 import ReaderDashboardPage from "./pages/ReaderDashboardPage";
-import SearchPage from "./pages/SearchPage";
 import ReportPage from "./pages/ReportPage";
 
 // --- Main App ---
@@ -40,7 +39,7 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/home" element={<HomePage />} />
             <Route path="/explore" element={<GalleryPage />} />
-            <Route path="/search" element={<SearchPage />} />
+            <Route path="/search" element={<GalleryPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/dashboard/author" element={<AuthorDashboardPage />} />
             <Route path="/dashboard/reader" element={<ReaderDashboardPage />} />
