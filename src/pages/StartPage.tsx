@@ -15,7 +15,7 @@ const StartPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}>
             <Link
-              to="/create"
+              to="/dashboard/author"
               className="group block rounded-3xl p-8 md:p-10 bg-gradient-to-br from-primary to-primary-container text-on-primary shadow-2xl hover:-translate-y-1 transition-all"
             >
               <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center mb-5">
@@ -28,7 +28,7 @@ const StartPage = () => {
 
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
             <Link
-              to="/explore"
+              to="/dashboard/reader"
               className="group block rounded-3xl p-8 md:p-10 border border-outline-variant/30 bg-surface-container-lowest text-on-surface shadow-xl hover:-translate-y-1 transition-all"
             >
               <div className="w-14 h-14 rounded-2xl bg-secondary/15 text-secondary flex items-center justify-center mb-5">
