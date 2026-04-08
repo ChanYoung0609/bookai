@@ -1,27 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { Flame, Crown, BookOpen, TrendingUp, Star } from "lucide-react";
-import { fetchBooks, type BookItem } from "../lib/api";
+import { Flame, Crown, BookOpen, TrendingUp, Star, Eye, Heart } from "lucide-react";
+import { demoPopularBooks, demoPaidPopularBooks, type DemoBookItem } from "../lib/demoData";
 
 type Tab = "popular" | "paid";
 
 const HomePage = () => {
   const [tab, setTab] = useState<Tab>("popular");
-  const [books, setBooks] = useState<BookItem[]>([]);
-  const [paidBooks, setPaidBooks] = useState<BookItem[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      fetchBooks(0, 8).then((data) => setBooks(data.content)).catch(() => {}),
-      // TODO: 유료 인기 API 연동
-      fetchBooks(0, 8).then((data) => setPaidBooks(data.content)).catch(() => {}),
-    ]).finally(() => setLoading(false));
-  }, []);
-
-  const displayBooks = tab === "popular" ? books : paidBooks;
+  const displayBooks: DemoBookItem[] = tab === "popular" ? demoPopularBooks : demoPaidPopularBooks;
 
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6">
@@ -92,15 +80,20 @@ const HomePage = () => {
                       {i + 1}
                     </div>
                   </div>
-                  {tab === "paid" && (
+                  {book.isPaid && (
                     <div className="absolute top-4 right-4 bg-primary/90 text-on-primary px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
                       <Crown size={12} />
-                      유료
+                      {book.price.toLocaleString()}원
                     </div>
                   )}
                   <div className="absolute bottom-0 left-0 right-0 p-6">
                     <h3 className="text-xl font-headline font-bold text-white mb-1">{book.title}</h3>
-                    <p className="text-white/70 text-sm">{book.authorName} 작가</p>
+                    <p className="text-white/70 text-sm mb-2">{book.authorName} 작가</p>
+                    <div className="flex items-center gap-3 text-white/60 text-xs">
+                      <span className="flex items-center gap-1"><Eye size={12} /> {book.reads.toLocaleString()}</span>
+                      <span className="flex items-center gap-1"><Heart size={12} /> {book.likes}</span>
+                      <span className="flex items-center gap-1"><Star size={12} className="fill-yellow-400 text-yellow-400" /> {book.rating}</span>
+                    </div>
                   </div>
                 </Link>
               </motion.div>
@@ -137,12 +130,6 @@ const HomePage = () => {
             </motion.div>
           ))}
         </div>
-
-        {loading && (
-          <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
 
         {/* 더보기 */}
         <div className="flex justify-center pt-4">

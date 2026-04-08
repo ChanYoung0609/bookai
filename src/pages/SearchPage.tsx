@@ -1,71 +1,61 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { Search, SlidersHorizontal, X, BookOpen, Crown, Star } from "lucide-react";
-import { fetchBooks, type BookItem } from "../lib/api";
+import { Search, SlidersHorizontal, X, BookOpen, Crown, Star, Eye, Heart } from "lucide-react";
+import { demoBooks, type DemoBookItem } from "../lib/demoData";
 
 type SortOption = "popular" | "latest" | "rating";
 type PriceFilter = "all" | "free" | "paid";
-
-const PAGE_SIZE = 8;
 
 const SearchPage = () => {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortOption>("popular");
   const [priceFilter, setPriceFilter] = useState<PriceFilter>("all");
   const [showFilters, setShowFilters] = useState(false);
-  const [books, setBooks] = useState<BookItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
   const [searched, setSearched] = useState(false);
-  const observerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const loadBooks = useCallback(async (pageNum: number, reset = false) => {
-    if (loading) return;
-    setLoading(true);
-    try {
-      // TODO: 검색 쿼리, 정렬, 필터 파라미터 API 연동
-      const data = await fetchBooks(pageNum, PAGE_SIZE);
-      setBooks((prev) => reset ? data.content : [...prev, ...data.content]);
-      setHasMore(!data.last);
-      setPage(pageNum + 1);
-    } catch {
-      setHasMore(false);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const filteredBooks = useMemo(() => {
+    if (!searched) return [];
+
+    let result = [...demoBooks];
+
+    // 키워드 검색
+    if (query.trim()) {
+      const q = query.trim().toLowerCase();
+      result = result.filter(
+        (b) =>
+          b.title.toLowerCase().includes(q) ||
+          b.authorName.toLowerCase().includes(q) ||
+          b.description.toLowerCase().includes(q)
+      );
     }
-  }, [loading]);
+
+    // 가격 필터
+    if (priceFilter === "free") result = result.filter((b) => !b.isPaid);
+    if (priceFilter === "paid") result = result.filter((b) => b.isPaid);
+
+    // 정렬
+    if (sort === "popular") result.sort((a, b) => b.reads - a.reads);
+    if (sort === "rating") result.sort((a, b) => b.rating - a.rating);
+    if (sort === "latest") result.sort((a, b) => b.bookId - a.bookId);
+
+    return result;
+  }, [searched, query, sort, priceFilter]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearched(true);
-    setBooks([]);
-    setPage(0);
-    setHasMore(true);
-    loadBooks(0, true);
   };
 
-  // 무한스크롤
-  useEffect(() => {
-    if (!searched) return;
-    const el = observerRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !loading) loadBooks(page);
-      },
-      { threshold: 0.1 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [searched, hasMore, loading, page, loadBooks]);
-
-  // 초기 포커스
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  const handleKeywordClick = (keyword: string) => {
+    setQuery(keyword);
+    setSearched(true);
+  };
 
   const popularKeywords = ["동물", "우주", "마법", "공주", "바다", "숲", "친구", "모험"];
 
@@ -119,7 +109,7 @@ const SearchPage = () => {
               {popularKeywords.map((keyword) => (
                 <button
                   key={keyword}
-                  onClick={() => { setQuery(keyword); setSearched(true); setBooks([]); setPage(0); setHasMore(true); loadBooks(0, true); }}
+                  onClick={() => handleKeywordClick(keyword)}
                   className="px-4 py-2 rounded-full bg-surface-container text-on-surface-variant text-sm font-medium hover:bg-primary hover:text-on-primary transition-all"
                 >
                   {keyword}
@@ -189,21 +179,27 @@ const SearchPage = () => {
           <>
             <div className="flex items-center justify-between">
               <p className="text-sm text-on-surface-variant">
-                <span className="font-bold text-on-surface">"{query || "전체"}"</span> 검색 결과
+                <span className="font-bold text-on-surface">"{query || "전체"}"</span> 검색 결과 ({filteredBooks.length}건)
               </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {books.map((book, i) => (
+              {filteredBooks.map((book, i) => (
                 <motion.div
-                  key={`${book.bookId}-${i}`}
+                  key={book.bookId}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: (i % PAGE_SIZE) * 0.05 }}
+                  transition={{ delay: i * 0.05 }}
                 >
                   <Link to={`/book/${book.bookId}`} className="group flex flex-row sm:flex-col gap-4 sm:gap-0">
                     <div className="relative w-1/3 sm:w-full aspect-[3/4] rounded-2xl overflow-hidden shadow-md sm:mb-3 group-hover:-translate-y-1 transition-transform duration-300 flex-shrink-0">
                       <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      {book.isPaid && (
+                        <div className="absolute top-2 right-2 bg-primary/90 text-on-primary px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1">
+                          <Crown size={10} />
+                          {book.price.toLocaleString()}원
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
                         <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-primary scale-0 group-hover:scale-100 transition-transform duration-500">
                           <BookOpen size={28} />
@@ -212,26 +208,25 @@ const SearchPage = () => {
                     </div>
                     <div className="flex flex-col justify-center sm:justify-start min-w-0">
                       <h3 className="text-base font-bold group-hover:text-primary transition-colors truncate">{book.title}</h3>
-                      <p className="text-on-surface-variant text-xs">{book.authorName} 작가</p>
+                      <p className="text-on-surface-variant text-xs mb-1">{book.authorName} 작가</p>
+                      <div className="flex items-center gap-3 text-on-surface-variant/70 text-xs">
+                        <span className="flex items-center gap-1"><Eye size={11} /> {book.reads.toLocaleString()}</span>
+                        <span className="flex items-center gap-1"><Heart size={11} /> {book.likes}</span>
+                        <span className="flex items-center gap-1"><Star size={11} className="fill-yellow-400 text-yellow-400" /> {book.rating}</span>
+                      </div>
                     </div>
                   </Link>
                 </motion.div>
               ))}
             </div>
 
-            {books.length === 0 && !loading && (
+            {filteredBooks.length === 0 && (
               <div className="text-center py-20 space-y-4">
                 <Search size={48} className="mx-auto text-on-surface-variant/30" />
                 <p className="text-on-surface-variant text-lg">검색 결과가 없습니다.</p>
                 <p className="text-on-surface-variant/70 text-sm">다른 키워드로 검색해보세요.</p>
               </div>
             )}
-
-            <div ref={observerRef} className="h-10 flex items-center justify-center">
-              {loading && (
-                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-              )}
-            </div>
           </>
         )}
       </div>
