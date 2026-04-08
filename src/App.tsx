@@ -20,10 +20,8 @@ import SignUpPage from "./pages/SignUpPage";
 import OAuthCallbackPage from "./pages/OAuthCallbackPage";
 import UnderConstructionPage from "./pages/UnderConstructionPage";
 import AboutPage from "./pages/AboutPage";
-import HomePage from "./pages/HomePage";
 import AuthorDashboardPage from "./pages/AuthorDashboardPage";
 import ReaderDashboardPage from "./pages/ReaderDashboardPage";
-import ReportPage from "./pages/ReportPage";
 import StartPage from "./pages/StartPage";
 
 export default function App() {
@@ -36,12 +34,10 @@ export default function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/start" element={<StartPage />} />
-            <Route path="/home" element={<HomePage />} />
             <Route path="/explore" element={<GalleryPage />} />
             <Route path="/search" element={<GalleryPage />} />
             <Route path="/dashboard/author" element={<AuthorDashboardPage />} />
             <Route path="/dashboard/reader" element={<ReaderDashboardPage />} />
-            <Route path="/report" element={<ReportPage />} />
             <Route path="/book/:id" element={<BookDetailPage />} />
             <Route path="/read/:id" element={<ReadingPage />} />
             <Route path="/create" element={<WizardPage />} />
