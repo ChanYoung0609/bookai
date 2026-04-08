@@ -60,7 +60,7 @@ const SliderSection = ({ title, icon, books, accentClass }: SliderSectionProps) 
   if (books.length === 0) return null;
 
   return (
-    <div className="rounded-3xl bg-white/75 backdrop-blur-sm border border-white/60 p-4 md:p-5 space-y-4 relative">
+    <div className="rounded-3xl bg-white/75 backdrop-blur-sm border border-white/60 p-5 md:p-6 space-y-5 relative">
       <div className={`flex items-center gap-2 font-bold text-sm md:text-base ${accentClass}`}>
         {icon}
         {title}
@@ -86,13 +86,13 @@ const SliderSection = ({ title, icon, books, accentClass }: SliderSectionProps) 
 
       <div
         ref={sliderRef}
-        className="flex gap-3 md:gap-4 overflow-x-auto pb-1 px-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        className="flex gap-4 md:gap-5 overflow-x-auto pb-2 px-9 md:px-10 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
         {displayBooks.map((book, index) => (
           <Link
             to={`/book/${book.bookId}`}
             key={`${title}-${book.bookId}-${index}`}
-            className="group shrink-0 w-[52vw] sm:w-[35vw] lg:w-[220px]"
+            className="group shrink-0 w-[58vw] sm:w-[40vw] lg:w-[280px]"
           >
             <div className="aspect-[3/4] rounded-2xl overflow-hidden shadow-lg mb-2">
               <img
@@ -174,9 +174,9 @@ const LandingPage = () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 1 }}
-            className="mt-16 md:mt-24 w-full max-w-6xl"
+            className="mt-16 md:mt-24 w-full max-w-7xl"
           >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-7 md:gap-10">
               <SliderSection title="최신순" icon={<Clock3 size={18} />} books={latestBooks} accentClass="text-primary" />
               <SliderSection title="인기순" icon={<Flame size={18} />} books={popularBooks} accentClass="text-secondary" />
             </div>
