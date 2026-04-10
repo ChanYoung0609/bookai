@@ -13,21 +13,26 @@ const Navbar = () => {
   const isReading = location.pathname.startsWith('/read');
 
   useEffect(() => {
-    const loggedIn = checkAuth();
-    setIsLoggedIn(loggedIn);
-    if (loggedIn) {
-      fetchUserMe().then((info) => {
-        if (info) {
-          setUser(info);
-        } else {
-          // 토큰이 만료/무효 → 로그아웃 처리
-          setIsLoggedIn(false);
-          setUser(null);
-        }
-      });
-    } else {
+    let cancelled = false;
+    if (!checkAuth()) {
+      setIsLoggedIn(false);
       setUser(null);
+      return;
     }
+    // 토큰이 있을 때만 서버 검증 후 상태 갱신 (낙관적 true 금지 → 깜빡임 방지)
+    fetchUserMe().then((info) => {
+      if (cancelled) return;
+      if (info) {
+        setIsLoggedIn(true);
+        setUser(info);
+      } else {
+        setIsLoggedIn(false);
+        setUser(null);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [location]);
 
   const handleProtectedClick = (e: React.MouseEvent, target: string) => {

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { Sparkles, Palette, BookOpen, Flame, Clock3, ChevronLeft, ChevronRight } from "lucide-react";
 import { fetchBooks, type BookItem } from "../lib/api";
-import { isLoggedIn } from "../lib/auth";
+import { isLoggedIn, fetchUserMe, removeAccessToken, clearUserCache } from "../lib/auth";
 
 type SliderSectionProps = {
   title: string;
@@ -124,10 +124,16 @@ const LandingPage = () => {
   const latestBooks = useMemo(() => books.slice(0, 8), [books]);
   const popularBooks = useMemo(() => [...books].reverse().slice(0, 8), [books]);
 
-  const handleStartClick = () => {
+  const handleStartClick = async () => {
     if (isLoggedIn()) {
-      navigate("/start");
-      return;
+      const user = await fetchUserMe(true);
+      if (user) {
+        navigate("/start");
+        return;
+      }
+      // 토큰이 남아있지만 서버가 인정하지 않으면 정리 후 로그인으로
+      removeAccessToken();
+      clearUserCache();
     }
     navigate("/login");
   };
