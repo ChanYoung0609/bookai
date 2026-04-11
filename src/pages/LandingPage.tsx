@@ -86,8 +86,8 @@ const SliderSection = ({ title, icon, books, accentClass, showRank = false }: Sl
   if (books.length === 0) return null;
 
   return (
-    <div className="rounded-3xl bg-white/75 backdrop-blur-sm border border-white/60 p-5 md:p-6 space-y-5 relative">
-      <div className={`flex items-center gap-2 font-bold text-sm md:text-base ${accentClass}`}>
+    <div className="space-y-4 md:space-y-5 relative">
+      <div className={`flex items-center gap-2 font-bold text-base md:text-xl px-1 md:px-0 ${accentClass}`}>
         {icon}
         {title}
       </div>
@@ -95,7 +95,7 @@ const SliderSection = ({ title, icon, books, accentClass, showRank = false }: Sl
       <button
         type="button"
         onClick={() => scroll("left")}
-        className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 border border-white text-on-surface-variant hover:text-on-surface hover:bg-white shadow-sm"
+        className="hidden md:block absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 border border-white text-on-surface-variant hover:text-on-surface hover:bg-white shadow-sm"
         aria-label={`${title} 왼쪽으로 이동`}
       >
         <ChevronLeft size={18} className="mx-auto" />
@@ -104,7 +104,7 @@ const SliderSection = ({ title, icon, books, accentClass, showRank = false }: Sl
       <button
         type="button"
         onClick={() => scroll("right")}
-        className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 border border-white text-on-surface-variant hover:text-on-surface hover:bg-white shadow-sm"
+        className="hidden md:block absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 border border-white text-on-surface-variant hover:text-on-surface hover:bg-white shadow-sm"
         aria-label={`${title} 오른쪽으로 이동`}
       >
         <ChevronRight size={18} className="mx-auto" />
@@ -112,7 +112,7 @@ const SliderSection = ({ title, icon, books, accentClass, showRank = false }: Sl
 
       <div
         ref={sliderRef}
-        className="flex gap-4 md:gap-5 overflow-x-auto pb-2 px-9 md:px-10 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        className="flex gap-4 md:gap-5 overflow-x-auto pb-2 px-1 md:px-10 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
         {displayBooks.map((book, index) => {
           const rank = showRank ? index + 1 : null;
@@ -120,7 +120,7 @@ const SliderSection = ({ title, icon, books, accentClass, showRank = false }: Sl
             <Link
               to={`/book/${book.bookId}`}
               key={`${title}-${book.bookId}-${index}`}
-              className="group shrink-0 w-[44vw] sm:w-[30vw] md:w-[210px]"
+              className="group shrink-0 w-[44vw] sm:w-[30vw] md:w-[220px] lg:w-[260px]"
             >
               <div className="relative aspect-[3/4] rounded-xl overflow-hidden shadow-md mb-3 bg-surface-container-lowest">
                 <img
@@ -198,7 +198,7 @@ const LandingPage = () => {
           transition={{ duration: 0.8 }}
           className="space-y-6"
         >
-          <div className="relative w-[96vw] md:w-[65vw] max-w-none aspect-video left-1/2 -translate-x-1/2 rounded-xl md:rounded-3xl overflow-hidden shadow-2xl border border-white/60 bg-surface-container-lowest">
+          <div className="relative w-screen md:w-[65vw] md:max-w-5xl aspect-video left-1/2 -translate-x-1/2 md:rounded-3xl overflow-hidden shadow-2xl md:border md:border-white/60 bg-surface-container-lowest">
             <AnimatePresence mode="wait">
               <motion.img
                 key={bannerIndex}
@@ -208,7 +208,7 @@ const LandingPage = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ duration: 0.8, ease: "easeInOut" }}
-                className="absolute inset-0 w-full h-full object-contain md:object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
             </AnimatePresence>
@@ -230,7 +230,7 @@ const LandingPage = () => {
             </div>
           </div>
 
-          <div className="pt-8">
+          <div className="pt-6 md:pt-8">
             <button
               type="button"
               onClick={handleStartClick}
@@ -245,7 +245,7 @@ const LandingPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
-          className="mt-10 md:mt-14 w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          className="mt-5 md:mt-12 w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         >
           <div className="flex gap-2 md:gap-3 justify-start md:justify-center px-2 min-w-max md:min-w-0">
             {CATEGORIES.map((cat) => (
@@ -253,7 +253,7 @@ const LandingPage = () => {
                 key={cat.id}
                 type="button"
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-5 py-2.5 rounded-full text-sm md:text-base font-bold transition-all whitespace-nowrap ${
+                className={`px-5 py-2.5 md:px-7 md:py-3 rounded-full text-sm md:text-base font-bold transition-all whitespace-nowrap ${
                   selectedCategory === cat.id
                     ? "bg-primary text-on-primary shadow-lg"
                     : "bg-white/80 text-on-surface-variant hover:bg-white border border-white/60"
@@ -291,10 +291,10 @@ const LandingPage = () => {
         )}
       </section>
 
-      <section className="bg-surface-container-lowest py-20 md:py-32 relative z-10">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="space-y-4 p-8 rounded-3xl glass-card border border-white/20">
+      <section className="bg-surface-container-lowest py-10 md:py-20 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-12">
+            <div className="space-y-3 md:space-y-4 p-5 md:p-8 rounded-2xl md:rounded-3xl glass-card border border-white/20">
               <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
                 <Sparkles className="w-6 h-6 md:w-8 md:h-8" />
               </div>
@@ -302,7 +302,7 @@ const LandingPage = () => {
               <p className="text-sm md:text-base text-on-surface-variant font-body">간단한 키워드만으로도 몰입감 있는 이야기를 생성할 수 있어요.</p>
             </div>
 
-            <div className="space-y-4 p-8 rounded-3xl glass-card border border-white/20">
+            <div className="space-y-3 md:space-y-4 p-5 md:p-8 rounded-2xl md:rounded-3xl glass-card border border-white/20">
               <div className="w-12 h-12 md:w-16 md:h-16 bg-secondary/10 rounded-2xl flex items-center justify-center text-secondary">
                 <Palette className="w-6 h-6 md:w-8 md:h-8" />
               </div>
@@ -310,7 +310,7 @@ const LandingPage = () => {
               <p className="text-sm md:text-base text-on-surface-variant font-body">수채화부터 만화풍까지, AI가 이야기 장면을 생생하게 그려줘요.</p>
             </div>
 
-            <div className="space-y-4 p-8 rounded-3xl glass-card border border-white/20">
+            <div className="space-y-3 md:space-y-4 p-5 md:p-8 rounded-2xl md:rounded-3xl glass-card border border-white/20">
               <div className="w-12 h-12 md:w-16 md:h-16 bg-tertiary/10 rounded-2xl flex items-center justify-center text-tertiary">
                 <BookOpen className="w-6 h-6 md:w-8 md:h-8" />
               </div>
