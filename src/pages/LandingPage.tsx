@@ -6,7 +6,7 @@ import { fetchBooks, type BookItem } from "../lib/api";
 import { isLoggedIn, fetchUserMe, removeAccessToken, clearUserCache } from "../lib/auth";
 
 const HERO_ILLUSTRATION = {
-  src: "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/66ee6490-053d-4211-9a24-24f4b93101e9.png",
+  src: "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/7511d991-8d84-4694-89fc-a9ee3a6a8f91.svg",
   alt: "AI로 만드는 나만의 동화책",
 };
 
@@ -158,6 +158,7 @@ const SliderSection = ({ title, icon, books, accentClass, showRank = false, more
 const LandingPage = () => {
   const [books, setBooks] = useState<BookItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [previewIndex, setPreviewIndex] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -168,6 +169,7 @@ const LandingPage = () => {
 
   const bestBooks = useMemo(() => [...books].reverse().slice(0, 10), [books]);
   const latestBooks = useMemo(() => books.slice(0, 10), [books]);
+  const previewBooks = useMemo(() => books.slice(0, 4), [books]);
 
   const handleStartClick = async () => {
     if (isLoggedIn()) {
@@ -184,8 +186,7 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="min-h-screen pt-24 magical-gradient relative overflow-hidden">
-      <div className="absolute inset-0 z-0 opacity-10 pointer-events-none storybook-bg" />
+    <div className="min-h-screen pt-24 bg-[#DCE2F9] relative overflow-hidden">
 
       <section className="max-w-7xl mx-auto px-6 pt-6 pb-12 md:pt-16 md:pb-20 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
@@ -221,7 +222,7 @@ const LandingPage = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="order-1 md:order-2 relative aspect-video md:aspect-[4/3] rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl border border-white/60 bg-surface-container-lowest"
+            className="order-1 md:order-2 relative aspect-video md:aspect-[4/3]"
           >
             <img
               src={HERO_ILLUSTRATION.src}
@@ -286,30 +287,82 @@ const LandingPage = () => {
 
       <section className="bg-surface-container-lowest py-10 md:py-20 relative z-10">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-12">
-            <div className="space-y-3 md:space-y-4 p-5 md:p-8 rounded-2xl md:rounded-3xl glass-card border border-white/20">
-              <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-                <Sparkles className="w-6 h-6 md:w-8 md:h-8" />
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+            <div className="space-y-3 md:space-y-4 p-5 md:p-6 rounded-2xl md:rounded-3xl glass-card border border-white/20">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                <Sparkles className="w-6 h-6 md:w-7 md:h-7" />
               </div>
-              <h4 className="text-lg md:text-2xl font-headline font-bold text-on-surface">AI 스토리텔링</h4>
-              <p className="text-sm md:text-base text-on-surface-variant font-body">간단한 키워드만으로도 몰입감 있는 이야기를 생성할 수 있어요.</p>
+              <h4 className="text-lg md:text-xl font-headline font-bold text-on-surface">이야기 생성</h4>
+              <p className="text-sm md:text-base text-on-surface-variant font-body">텍스트나 음성으로<br />스토리를 만들어요</p>
             </div>
 
-            <div className="space-y-3 md:space-y-4 p-5 md:p-8 rounded-2xl md:rounded-3xl glass-card border border-white/20">
-              <div className="w-12 h-12 md:w-16 md:h-16 bg-secondary/10 rounded-2xl flex items-center justify-center text-secondary">
-                <Palette className="w-6 h-6 md:w-8 md:h-8" />
+            <div className="space-y-3 md:space-y-4 p-5 md:p-6 rounded-2xl md:rounded-3xl glass-card border border-white/20">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-secondary/10 rounded-2xl flex items-center justify-center text-secondary">
+                <Palette className="w-6 h-6 md:w-7 md:h-7" />
               </div>
-              <h4 className="text-lg md:text-2xl font-headline font-bold text-on-surface">마법 일러스트</h4>
-              <p className="text-sm md:text-base text-on-surface-variant font-body">수채화부터 만화풍까지, AI가 이야기 장면을 생생하게 그려줘요.</p>
+              <h4 className="text-lg md:text-xl font-headline font-bold text-on-surface">그림 생성</h4>
+              <p className="text-sm md:text-base text-on-surface-variant font-body">장면에 맞는 그림이<br />자동으로 완성돼요</p>
             </div>
 
-            <div className="space-y-3 md:space-y-4 p-5 md:p-8 rounded-2xl md:rounded-3xl glass-card border border-white/20">
-              <div className="w-12 h-12 md:w-16 md:h-16 bg-tertiary/10 rounded-2xl flex items-center justify-center text-tertiary">
-                <BookOpen className="w-6 h-6 md:w-8 md:h-8" />
+            <div className="space-y-3 md:space-y-4 p-5 md:p-6 rounded-2xl md:rounded-3xl glass-card border border-white/20">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-tertiary/10 rounded-2xl flex items-center justify-center text-tertiary">
+                <BookOpen className="w-6 h-6 md:w-7 md:h-7" />
               </div>
-              <h4 className="text-lg md:text-2xl font-headline font-bold text-on-surface">출간까지 한 번에</h4>
-              <p className="text-sm md:text-base text-on-surface-variant font-body">완성한 작품을 저장하고 실제 책처럼 감상해보세요.</p>
+              <h4 className="text-lg md:text-xl font-headline font-bold text-on-surface">책 완성</h4>
+              <p className="text-sm md:text-base text-on-surface-variant font-body">한 권의 그림책으로<br />저장하고 공유해요</p>
             </div>
+
+            {previewBooks.length > 0 && (
+              <div className="md:col-span-3 lg:col-span-2 p-5 md:p-6 rounded-2xl md:rounded-3xl glass-card border border-white/20 flex flex-col">
+                <div className="mb-3">
+                  <p className="text-sm md:text-base font-bold text-primary">이야기를 입력하면</p>
+                  <h4 className="text-lg md:text-xl font-headline font-bold text-on-surface">이렇게 한 권의 책이 완성돼요</h4>
+                </div>
+
+                <div className="relative flex-1 rounded-xl overflow-hidden bg-surface-container-low min-h-[180px] md:min-h-[200px]">
+                  {previewBooks[previewIndex] && (
+                    <img
+                      src={previewBooks[previewIndex].coverImageUrl}
+                      alt={previewBooks[previewIndex].title}
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPreviewIndex((i) => (i - 1 + previewBooks.length) % previewBooks.length)
+                    }
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center text-on-surface transition-colors"
+                    aria-label="이전 미리보기"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewIndex((i) => (i + 1) % previewBooks.length)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center text-on-surface transition-colors"
+                    aria-label="다음 미리보기"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+
+                <div className="mt-3 flex items-center justify-center gap-1.5">
+                  {previewBooks.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setPreviewIndex(i)}
+                      aria-label={`${i + 1}번 미리보기로 이동`}
+                      className={`h-1.5 rounded-full transition-all ${
+                        i === previewIndex ? "w-5 bg-primary" : "w-1.5 bg-on-surface-variant/30"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
