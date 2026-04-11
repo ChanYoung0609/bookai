@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
-import { Sparkles, Palette, BookOpen, Flame, Clock3, ChevronLeft, ChevronRight } from "lucide-react";
+import { Sparkles, Flame, Clock3, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { fetchBooks, type BookItem } from "../lib/api";
 import { isLoggedIn, fetchUserMe, removeAccessToken, clearUserCache } from "../lib/auth";
 
@@ -9,6 +9,17 @@ const HERO_ILLUSTRATION = {
   src: "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/7511d991-8d84-4694-89fc-a9ee3a6a8f91.svg",
   alt: "AI로 만드는 나만의 동화책",
 };
+
+const FEATURE_ICONS = {
+  story: "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/b641b25f-aaea-45fa-af08-5aec3d4b77fd.png",
+  illustration: "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/c700d0e7-62f1-4a9c-abfd-c8a353491136.png",
+  complete: "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/84a114ed-8746-4090-921c-3008150764cb.png",
+};
+const FEATURE_BANNERS = [
+  "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/8bccf1b4-f7f6-4ffe-8f83-5273c70da76d.png",
+  "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/8bccf1b4-f7f6-4ffe-8f83-5273c70da76d.png",
+  "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/8bccf1b4-f7f6-4ffe-8f83-5273c70da76d.png",
+] as const;
 
 const CATEGORIES = [
   { id: "all", label: "전체" },
@@ -158,7 +169,7 @@ const SliderSection = ({ title, icon, books, accentClass, showRank = false, more
 const LandingPage = () => {
   const [books, setBooks] = useState<BookItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [previewIndex, setPreviewIndex] = useState(0);
+  const [bannerIndex, setBannerIndex] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -169,7 +180,17 @@ const LandingPage = () => {
 
   const bestBooks = useMemo(() => [...books].reverse().slice(0, 10), [books]);
   const latestBooks = useMemo(() => books.slice(0, 10), [books]);
-  const previewBooks = useMemo(() => books.slice(0, 4), [books]);
+  const currentBanner = FEATURE_BANNERS[bannerIndex];
+  const goToPrevBanner = () =>
+    setBannerIndex((prev) => (prev - 1 + FEATURE_BANNERS.length) % FEATURE_BANNERS.length);
+  const goToNextBanner = () => setBannerIndex((prev) => (prev + 1) % FEATURE_BANNERS.length);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setBannerIndex((prev) => (prev + 1) % FEATURE_BANNERS.length);
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const handleStartClick = async () => {
     if (isLoggedIn()) {
@@ -236,134 +257,153 @@ const LandingPage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="mt-8 md:mt-14 w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          transition={{ delay: 0.35, duration: 0.6 }}
+          className="mt-8 md:mt-14"
         >
-          <div className="flex gap-2 md:gap-3 justify-start md:justify-center px-2 min-w-max md:min-w-0">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-5 py-2.5 md:px-7 md:py-3 rounded-full text-sm md:text-base font-bold transition-all whitespace-nowrap ${
-                  selectedCategory === cat.id
-                    ? "bg-primary text-on-primary shadow-lg"
-                    : "bg-white/80 text-on-surface-variant hover:bg-white border border-white/60"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+          <div className="flex flex-col lg:flex-row lg:items-start gap-4 md:gap-5">
+            <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-5 flex-1">
+              <div className="flex flex-col items-center text-center gap-2 p-3 md:p-4 rounded-2xl glass-card border border-white/20 w-full md:w-52 min-h-[185px] md:min-h-[220px]">
+                <div className="w-[88px] h-[88px] md:w-[96px] md:h-[96px] shrink-0 flex items-center justify-center">
+                  <img
+                    src={FEATURE_ICONS.story}
+                    alt=""
+                    className="w-full h-full object-contain"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-base md:text-lg font-headline font-bold text-on-surface leading-tight">이야기 생성</h4>
+                  <p className="text-sm md:text-base text-on-surface-variant font-body mt-1 leading-snug">텍스트나 음성으로<br />스토리를 만들어요</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center text-center gap-2 p-3 md:p-4 rounded-2xl glass-card border border-white/20 w-full md:w-52 min-h-[185px] md:min-h-[220px]">
+                <div className="w-[88px] h-[88px] md:w-[96px] md:h-[96px] shrink-0 flex items-center justify-center">
+                  <img
+                    src={FEATURE_ICONS.illustration}
+                    alt=""
+                    className="w-full h-full object-contain"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-base md:text-lg font-headline font-bold text-on-surface leading-tight">그림 생성</h4>
+                  <p className="text-sm md:text-base text-on-surface-variant font-body mt-1 leading-snug">장면에 맞는 그림이<br />자동으로 완성돼요</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center text-center gap-2 p-3 md:p-4 rounded-2xl glass-card border border-white/20 w-full md:w-52 min-h-[185px] md:min-h-[220px]">
+                <div className="w-[88px] h-[88px] md:w-[96px] md:h-[96px] shrink-0 flex items-center justify-center">
+                  <img
+                    src={FEATURE_ICONS.complete}
+                    alt=""
+                    className="w-full h-full object-contain"
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <h4 className="text-base md:text-lg font-headline font-bold text-on-surface leading-tight">책 완성</h4>
+                  <p className="text-sm md:text-base text-on-surface-variant font-body mt-1 leading-snug">한 권의 그림책으로<br />저장하고 공유해요</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full md:w-[380px] lg:w-[480px] self-start space-y-3">
+              <div className="relative aspect-[16/9] rounded-2xl overflow-hidden border border-white/20 glass-card shadow-sm">
+              <img
+                src={currentBanner}
+                alt="동화 제작 배너"
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+                <button
+                  type="button"
+                  onClick={goToPrevBanner}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 text-on-surface shadow hover:bg-white"
+                  aria-label="이전 배너"
+                >
+                  <ChevronLeft size={18} className="mx-auto" />
+                </button>
+                <button
+                  type="button"
+                  onClick={goToNextBanner}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 text-on-surface shadow hover:bg-white"
+                  aria-label="다음 배너"
+                >
+                  <ChevronRight size={18} className="mx-auto" />
+                </button>
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                {FEATURE_BANNERS.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setBannerIndex(idx)}
+                    aria-label={`${idx + 1}번 배너로 이동`}
+                    className={`h-2.5 rounded-full transition-all ${
+                      idx === bannerIndex ? "w-6 bg-primary" : "w-2.5 bg-white/80 border border-white"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </motion.div>
 
-        {books.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 1 }}
-            className="mt-12 md:mt-16 w-full"
-          >
-            <div className="space-y-7 md:space-y-10">
-              <SliderSection
-                title="베스트셀러 TOP 10"
-                icon={<Flame size={18} />}
-                books={bestBooks}
-                accentClass="text-secondary"
-                showRank
-                moreLink="/explore"
-              />
-              <SliderSection
-                title="신간 도서"
-                icon={<Clock3 size={18} />}
-                books={latestBooks}
-                accentClass="text-primary"
-                moreLink="/explore"
-              />
-            </div>
-          </motion.div>
-        )}
       </section>
 
-      <section className="bg-surface-container-lowest py-10 md:py-20 relative z-10">
-        <div className="max-w-7xl mx-auto px-4 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-            <div className="space-y-3 md:space-y-4 p-5 md:p-6 rounded-2xl md:rounded-3xl glass-card border border-white/20">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-                <Sparkles className="w-6 h-6 md:w-7 md:h-7" />
-              </div>
-              <h4 className="text-lg md:text-xl font-headline font-bold text-on-surface">이야기 생성</h4>
-              <p className="text-sm md:text-base text-on-surface-variant font-body">텍스트나 음성으로<br />스토리를 만들어요</p>
+      <section className="bg-white py-10 md:py-14">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          >
+            <div className="flex gap-2 md:gap-3 justify-start md:justify-center px-2 min-w-max md:min-w-0">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-5 py-2.5 md:px-7 md:py-3 rounded-full text-sm md:text-base font-bold transition-all whitespace-nowrap ${
+                    selectedCategory === cat.id
+                      ? "bg-primary text-on-primary shadow-lg"
+                      : "bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container border border-outline-variant/20"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
             </div>
+          </motion.div>
 
-            <div className="space-y-3 md:space-y-4 p-5 md:p-6 rounded-2xl md:rounded-3xl glass-card border border-white/20">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-secondary/10 rounded-2xl flex items-center justify-center text-secondary">
-                <Palette className="w-6 h-6 md:w-7 md:h-7" />
+          {books.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 1 }}
+              className="mt-12 md:mt-16 w-full"
+            >
+              <div className="space-y-7 md:space-y-10">
+                <SliderSection
+                  title="베스트셀러 TOP 10"
+                  icon={<Flame size={18} />}
+                  books={bestBooks}
+                  accentClass="text-secondary"
+                  showRank
+                  moreLink="/explore"
+                />
+                <SliderSection
+                  title="신간 도서"
+                  icon={<Clock3 size={18} />}
+                  books={latestBooks}
+                  accentClass="text-primary"
+                  moreLink="/explore"
+                />
               </div>
-              <h4 className="text-lg md:text-xl font-headline font-bold text-on-surface">그림 생성</h4>
-              <p className="text-sm md:text-base text-on-surface-variant font-body">장면에 맞는 그림이<br />자동으로 완성돼요</p>
-            </div>
-
-            <div className="space-y-3 md:space-y-4 p-5 md:p-6 rounded-2xl md:rounded-3xl glass-card border border-white/20">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-tertiary/10 rounded-2xl flex items-center justify-center text-tertiary">
-                <BookOpen className="w-6 h-6 md:w-7 md:h-7" />
-              </div>
-              <h4 className="text-lg md:text-xl font-headline font-bold text-on-surface">책 완성</h4>
-              <p className="text-sm md:text-base text-on-surface-variant font-body">한 권의 그림책으로<br />저장하고 공유해요</p>
-            </div>
-
-            {previewBooks.length > 0 && (
-              <div className="md:col-span-3 lg:col-span-2 p-5 md:p-6 rounded-2xl md:rounded-3xl glass-card border border-white/20 flex flex-col">
-                <div className="mb-3">
-                  <p className="text-sm md:text-base font-bold text-primary">이야기를 입력하면</p>
-                  <h4 className="text-lg md:text-xl font-headline font-bold text-on-surface">이렇게 한 권의 책이 완성돼요</h4>
-                </div>
-
-                <div className="relative flex-1 rounded-xl overflow-hidden bg-surface-container-low min-h-[180px] md:min-h-[200px]">
-                  {previewBooks[previewIndex] && (
-                    <img
-                      src={previewBooks[previewIndex].coverImageUrl}
-                      alt={previewBooks[previewIndex].title}
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setPreviewIndex((i) => (i - 1 + previewBooks.length) % previewBooks.length)
-                    }
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center text-on-surface transition-colors"
-                    aria-label="이전 미리보기"
-                  >
-                    <ChevronLeft size={18} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewIndex((i) => (i + 1) % previewBooks.length)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white shadow-lg flex items-center justify-center text-on-surface transition-colors"
-                    aria-label="다음 미리보기"
-                  >
-                    <ChevronRight size={18} />
-                  </button>
-                </div>
-
-                <div className="mt-3 flex items-center justify-center gap-1.5">
-                  {previewBooks.map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setPreviewIndex(i)}
-                      aria-label={`${i + 1}번 미리보기로 이동`}
-                      className={`h-1.5 rounded-full transition-all ${
-                        i === previewIndex ? "w-5 bg-primary" : "w-1.5 bg-on-surface-variant/30"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+            </motion.div>
+          )}
         </div>
       </section>
     </div>
@@ -371,3 +411,4 @@ const LandingPage = () => {
 };
 
 export default LandingPage;
+
