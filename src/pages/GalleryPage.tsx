@@ -11,7 +11,6 @@ type LikedMap = Record<string, boolean>;
 
 const GalleryPage = () => {
   const [books, setBooks] = useState<BookItem[]>([]);
-  const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState("");
@@ -20,22 +19,41 @@ const GalleryPage = () => {
   const [likedMap, setLikedMap] = useState<LikedMap>({});
   const observerRef = useRef<HTMLDivElement>(null);
   const animatedIdsRef = useRef<Set<string>>(new Set());
+  const pageRef = useRef(0);
+  const loadingRef = useRef(false);
+  const hasMoreRef = useRef(true);
+  const loadedPagesRef = useRef<Set<number>>(new Set());
 
   const loadMore = useCallback(async () => {
-    if (loading || !hasMore) return;
+    const targetPage = pageRef.current;
+    if (loadingRef.current || !hasMoreRef.current) return;
+    if (loadedPagesRef.current.has(targetPage)) return;
+
+    loadingRef.current = true;
     setLoading(true);
     try {
-      const data = await fetchBooks(page, PAGE_SIZE);
-      setBooks((prev) => [...prev, ...data.content]);
-      setHasMore(!data.last);
-      setPage((prev) => prev + 1);
+      loadedPagesRef.current.add(targetPage);
+      const data = await fetchBooks(targetPage, PAGE_SIZE);
+      setBooks((prev) => {
+        const map = new Map(prev.map((b) => [b.bookId, b]));
+        data.content.forEach((b) => map.set(b.bookId, b));
+        return Array.from(map.values());
+      });
+      const nextHasMore = !data.last;
+      hasMoreRef.current = nextHasMore;
+      setHasMore(nextHasMore);
+      if (nextHasMore) {
+        pageRef.current = targetPage + 1;
+      }
     } catch {
       // API 실패 시 더 이상 로드하지 않음
+      hasMoreRef.current = false;
       setHasMore(false);
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
-  }, [page, loading, hasMore]);
+  }, []);
 
   useEffect(() => {
     loadMore();
