@@ -246,14 +246,14 @@ const WizardPage = () => {
                   onClick={handleMicInput}
                   disabled={!speechSupported}
                   aria-label="음성 입력"
-                  className={`px-4 md:px-5 rounded-2xl font-bold shadow-xl border transition-all flex items-center gap-2 ${
+                  className={`min-w-[120px] px-4 md:px-5 rounded-2xl font-bold shadow-xl border transition-all flex items-center justify-center gap-2 ${
                     isListening
                       ? "bg-red-500 text-white border-red-500"
-                      : "bg-white text-on-surface border-outline-variant hover:bg-surface-container-low"
+                      : "bg-white text-on-surface border-primary/40 hover:bg-surface-container-low"
                   } disabled:opacity-40 disabled:cursor-not-allowed`}
                 >
                   <Mic size={18} />
-                  <span className="hidden sm:inline text-sm md:text-base">{isListening ? "듣는 중" : "음성 입력"}</span>
+                  <span className="text-sm md:text-base">{isListening ? "듣는 중" : "음성 입력"}</span>
                 </button>
               </div>
             </>
