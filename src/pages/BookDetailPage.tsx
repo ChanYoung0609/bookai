@@ -94,7 +94,7 @@ const BookDetailPage = () => {
                     <Sparkles size={14} />
                     AI 그림책
                   </div>
-                  <h1 className="text-3xl font-display font-bold leading-tight mb-2">{book.title}</h1>
+                  <h2 className="text-3xl font-display font-bold leading-tight mb-2">{book.title}</h2>
                   <p className="text-on-surface-variant text-base font-medium mb-2">{book.authorName} 작가</p>
                   <div className="flex items-center gap-1.5 text-on-surface-variant">
                     <BookOpen size={16} />
@@ -261,3 +261,4 @@ const BookDetailPage = () => {
 };
 
 export default BookDetailPage;
+
