@@ -22,3 +22,15 @@ jobs:
             pnpm install
             pnpm build
             sudo systemctl reload nginx
+      - name: Discord notification
+        if: always()
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          status: ${{ job.status }}
+          title: "bookai 프론트엔드 배포"
+          description: |
+              **커밋**: `${{ github.event.head_commit.message }}`
+              **작성자**: ${{ github.event.head_commit.author.name }}
+          username: GitHub Actions
+            
