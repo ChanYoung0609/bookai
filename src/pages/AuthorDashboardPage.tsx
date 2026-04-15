@@ -38,7 +38,7 @@ const AuthorDashboardPage = () => {
       <div className="max-w-7xl mx-auto space-y-8">
         {/* 헤더 */}
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate("/")} className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-colors">
+          <button onClick={() => navigate("/start")} className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-surface-container-high transition-colors">
             <ArrowLeft size={20} />
           </button>
           <div>
