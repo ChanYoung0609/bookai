@@ -4,12 +4,6 @@ import { Palette, Heart, ChevronRight, Globe, FileText, LogOut, Settings } from 
 import { MOCK_BOOKS } from "../constants";
 import { logout, fetchUserMe, isLoggedIn, type UserInfo } from "../lib/auth";
 
-const profileBadges = [
-  { id: "first-complete", title: "첫 완독", desc: "첫 책 완독 달성" },
-  { id: "likes-100", title: "인기 작가", desc: "좋아요 100회 이상" },
-  { id: "weekly-streak", title: "꾸준한 독자", desc: "7일 연속 읽기" },
-];
-
 const ProfilePage = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserInfo | null>(null);
@@ -88,17 +82,6 @@ const ProfilePage = () => {
               </div>
             </div>
 
-            <div className="pt-4 space-y-2">
-              <p className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">업적 / 뱃지</p>
-              <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                {profileBadges.map((badge) => (
-                  <div key={badge.id} className="px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/20">
-                    <p className="text-xs md:text-sm font-bold text-on-surface">{badge.title}</p>
-                    <p className="text-[10px] md:text-xs text-on-surface-variant">{badge.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
 
           <div className="flex flex-col gap-3 w-full md:w-auto">
