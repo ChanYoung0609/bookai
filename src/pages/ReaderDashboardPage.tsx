@@ -191,7 +191,7 @@ const ReaderDashboardPage = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 lg:h-full lg:flex lg:flex-col">
             <div className="bg-surface-container-lowest rounded-3xl p-6 border border-outline-variant/20">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h3 className="font-headline font-bold text-on-surface flex items-center gap-2">
@@ -235,7 +235,7 @@ const ReaderDashboardPage = () => {
               </div>
             </div>
 
-            <div className="bg-surface-container-lowest rounded-3xl p-6 border border-outline-variant/20">
+            <div className="bg-surface-container-lowest rounded-3xl p-6 border border-outline-variant/20 lg:flex-1">
               <h3 className="font-headline font-bold text-on-surface mb-4 flex items-center gap-2">
                 <CheckCircle size={18} className="text-secondary" />
                 최근 완독
