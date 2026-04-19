@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { BookOpen, Clock, TrendingUp, Heart, ArrowLeft, CheckCircle, BookMarked, Target, X } from "lucide-react";
@@ -36,12 +36,38 @@ const ReaderDashboardPage = () => {
   const [monthlyGoal, setMonthlyGoal] = useState<number>(mockReaderStats.monthlyGoal);
   const [goalDraft, setGoalDraft] = useState<string>(String(mockReaderStats.monthlyGoal));
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [animatedGoalPercent, setAnimatedGoalPercent] = useState(0);
+  const animatedGoalPercentRef = useRef(0);
 
   useEffect(() => {
     if (!isLoggedIn()) navigate("/login");
   }, [navigate]);
 
   const goalPercent = Math.min(100, Math.round((mockReaderStats.monthlyCompleted / monthlyGoal) * 100));
+
+  useEffect(() => {
+    const from = animatedGoalPercentRef.current;
+    const to = goalPercent;
+    const duration = 700;
+    const start = performance.now();
+    let frameId = 0;
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const next = Math.round(from + (to - from) * eased);
+
+      animatedGoalPercentRef.current = next;
+      setAnimatedGoalPercent(next);
+
+      if (progress < 1) {
+        frameId = requestAnimationFrame(tick);
+      }
+    };
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, [goalPercent]);
 
   const sortedReadingList = useMemo(() => {
     const list = [...mockReadingList];
@@ -182,10 +208,7 @@ const ReaderDashboardPage = () => {
             </div>
 
             <div className="mt-4 flex justify-end">
-              <Link
-                to="/library"
-                className="text-sm font-bold text-primary hover:underline"
-              >
+              <Link to="/library" className="text-sm font-bold text-primary hover:underline">
                 더보기
               </Link>
             </div>
@@ -218,12 +241,12 @@ const ReaderDashboardPage = () => {
                       stroke="currentColor"
                       className="text-tertiary"
                       strokeWidth="3"
-                      strokeDasharray={`${goalPercent} 100`}
+                      strokeDasharray={`${animatedGoalPercent} 100`}
                       strokeLinecap="round"
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-lg font-bold text-on-surface">{goalPercent}%</span>
+                    <span className="text-lg font-bold text-on-surface">{animatedGoalPercent}%</span>
                   </div>
                 </div>
                 <div>
@@ -264,10 +287,7 @@ const ReaderDashboardPage = () => {
       </div>
 
       {isGoalModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/40"
-          onClick={closeGoalModal}
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/40" onClick={closeGoalModal}>
           <div
             className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-outline-variant/20"
             onClick={(e) => e.stopPropagation()}
