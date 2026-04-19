@@ -180,6 +180,15 @@ const ReaderDashboardPage = () => {
                 </Link>
               ))}
             </div>
+
+            <div className="mt-4 flex justify-end">
+              <Link
+                to="/library"
+                className="text-sm font-bold text-primary hover:underline"
+              >
+                더보기
+              </Link>
+            </div>
           </div>
 
           <div className="space-y-4">
