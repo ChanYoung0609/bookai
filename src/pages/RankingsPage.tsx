@@ -205,23 +205,29 @@ const AuthorSection = ({ title, icon, items }: AuthorSectionProps) => {
               <div className="mb-2 px-2 py-1 rounded-xl bg-surface-container border border-outline-variant/20 text-center">
                 <p className="text-xs font-bold text-on-surface truncate">{item.name}</p>
               </div>
-              <div className="mb-2 flex justify-center">
-                <img
-                  src={`https://picsum.photos/seed/author-${item.id}/96/96`}
-                  alt={`${item.name} 프로필`}
-                  className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border-2 border-white shadow-sm"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
               <motion.div
-                className={`rounded-t-2xl bg-gradient-to-b ${podiumToneClass[rank]} ${podiumHeightClass[rank]} flex items-center justify-center shadow-inner`}
-                initial={{ scaleY: 0 }}
-                animate={{ scaleY: 1 }}
-                transition={{ duration: 0.55, ease: "easeOut", delay: rank * 0.08 }}
-                style={{ transformOrigin: "bottom" }}
+                initial={{ y: 18, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.45, ease: "easeOut", delay: rank * 0.08 }}
               >
-                <span className="text-3xl md:text-4xl font-black leading-none">{rank}</span>
+                <div className="mb-2 flex justify-center">
+                  <img
+                    src={`https://picsum.photos/seed/author-${item.id}/96/96`}
+                    alt={`${item.name} 프로필`}
+                    className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border-2 border-white shadow-sm"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+                <motion.div
+                  className={`rounded-t-2xl bg-gradient-to-b ${podiumToneClass[rank]} ${podiumHeightClass[rank]} flex items-center justify-center shadow-inner`}
+                  initial={{ scaleY: 0 }}
+                  animate={{ scaleY: 1 }}
+                  transition={{ duration: 0.55, ease: "easeOut", delay: rank * 0.08 }}
+                  style={{ transformOrigin: "bottom" }}
+                >
+                  <span className="text-3xl md:text-4xl font-black leading-none">{rank}</span>
+                </motion.div>
               </motion.div>
             </div>
           );
@@ -274,23 +280,29 @@ const BookSection = ({ title, icon, items, metric }: BookSectionProps) => {
               <div className="mb-2 px-2 py-1 rounded-xl bg-surface-container border border-outline-variant/20 text-center">
                 <p className="text-xs font-bold text-on-surface truncate">{item.title}</p>
               </div>
-              <div className="mb-2 flex justify-center">
-                <img
-                  src={item.coverImageUrl}
-                  alt={`${item.title} 표지`}
-                  className="w-[52px] h-[68px] md:w-[60px] md:h-[84px] rounded-lg object-cover border-2 border-white shadow-sm"
-                  loading="lazy"
-                  decoding="async"
-                />
-              </div>
               <motion.div
-                className={`rounded-t-2xl bg-gradient-to-b ${podiumToneClass[rank]} ${podiumHeightClass[rank]} flex items-center justify-center shadow-inner`}
-                initial={{ scaleY: 0 }}
-                animate={{ scaleY: 1 }}
-                transition={{ duration: 0.55, ease: "easeOut", delay: rank * 0.08 }}
-                style={{ transformOrigin: "bottom" }}
+                initial={{ y: 18, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.45, ease: "easeOut", delay: rank * 0.08 }}
               >
-                <span className="text-3xl md:text-4xl font-black leading-none">{rank}</span>
+                <div className="mb-2 flex justify-center">
+                  <img
+                    src={item.coverImageUrl}
+                    alt={`${item.title} 표지`}
+                    className="w-[52px] h-[68px] md:w-[60px] md:h-[84px] rounded-lg object-cover border-2 border-white shadow-sm"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+                <motion.div
+                  className={`rounded-t-2xl bg-gradient-to-b ${podiumToneClass[rank]} ${podiumHeightClass[rank]} flex items-center justify-center shadow-inner`}
+                  initial={{ scaleY: 0 }}
+                  animate={{ scaleY: 1 }}
+                  transition={{ duration: 0.55, ease: "easeOut", delay: rank * 0.08 }}
+                  style={{ transformOrigin: "bottom" }}
+                >
+                  <span className="text-3xl md:text-4xl font-black leading-none">{rank}</span>
+                </motion.div>
               </motion.div>
             </div>
           );
