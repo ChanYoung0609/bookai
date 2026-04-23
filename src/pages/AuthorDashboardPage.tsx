@@ -69,7 +69,9 @@ const AuthorDashboardPage = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-primary to-primary-container rounded-3xl p-8 text-on-primary"
+            whileHover={{ y: -3 }}
+            onClick={() => navigate("/dashboard/author/revenue")}
+            className="bg-gradient-to-br from-primary to-primary-container rounded-3xl p-8 text-on-primary cursor-pointer"
           >
             <DollarSign size={28} className="mb-3" />
             <p className="text-on-primary/70 text-sm">총 수익</p>
@@ -78,6 +80,7 @@ const AuthorDashboardPage = () => {
               <TrendingUp size={14} />
               이번 달 +{mockAuthorStats.monthlyRevenue.toLocaleString()}원
             </div>
+            <p className="mt-4 text-xs text-on-primary/80">클릭해서 월별/작품별 수익 그래프 보기</p>
           </motion.div>
 
           <div className="grid grid-cols-2 gap-4">
