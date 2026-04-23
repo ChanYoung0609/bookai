@@ -1,6 +1,6 @@
 ﻿import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Palette, Heart, ChevronRight } from "lucide-react";
+import { Palette, Heart } from "lucide-react";
 import { MOCK_BOOKS } from "../constants";
 import { fetchUserMe, isLoggedIn, type UserInfo } from "../lib/auth";
 
@@ -8,6 +8,9 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const likedCount = MOCK_BOOKS.length;
+  const thisWeekLikes = Math.max(1, Math.floor(likedCount / 4));
+  const recentLikedTitle = MOCK_BOOKS[0]?.title ?? "-";
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -115,25 +118,19 @@ const ProfilePage = () => {
               <Heart size={20} className="text-red-500 fill-red-500" />
               좋아요 한 이야기
             </h3>
-            <div className="space-y-4">
-              {MOCK_BOOKS.slice(0, 2).map((book) => (
-                <div key={book.id} className="flex items-center gap-4 group cursor-pointer">
-                  <div className="w-12 md:w-16 aspect-[3/4] rounded-lg overflow-hidden shadow-md flex-shrink-0">
-                    <img
-                      src={book.coverUrl}
-                      alt={book.title}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-bold group-hover:text-primary transition-colors truncate text-sm md:text-base">{book.title}</h4>
-                    <p className="text-[10px] md:text-xs text-on-surface-variant">{book.author} 작가</p>
-                  </div>
-                  <ChevronRight size={20} className="text-on-surface-variant flex-shrink-0" />
-                </div>
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+              <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
+                <p className="text-xs text-on-surface-variant">총 좋아요</p>
+                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">{likedCount}</p>
+              </div>
+              <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
+                <p className="text-xs text-on-surface-variant">이번 주 추가</p>
+                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">+{thisWeekLikes}</p>
+              </div>
+              <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
+                <p className="text-xs text-on-surface-variant">최근 좋아요</p>
+                <p className="mt-1 text-sm md:text-base font-bold text-on-surface truncate">{recentLikedTitle}</p>
+              </div>
             </div>
           </div>
         </div>
