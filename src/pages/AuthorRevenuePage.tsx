@@ -31,25 +31,48 @@ const getRevenueDataByYear = (year: number) => {
 };
 
 const bookSalesData = [
-  { id: "1", title: "별빛 요정의 모험", sold: 164 },
-  { id: "2", title: "숲속 친구들", sold: 129 },
-  { id: "3", title: "구름 위의 집", sold: 98 },
-  { id: "4", title: "바다 위의 별", sold: 74 },
+  { id: "1", title: "별빛 요정의 모험", monthly: [8, 10, 12, 14, 15, 18, 16, 17, 19, 21, 20, 22] },
+  { id: "2", title: "숲속 친구들", monthly: [6, 7, 8, 9, 10, 11, 10, 11, 12, 13, 13, 14] },
+  { id: "3", title: "구름 위의 집", monthly: [4, 5, 6, 7, 7, 8, 8, 9, 9, 10, 11, 12] },
+  { id: "4", title: "바다 위의 별", monthly: [3, 4, 5, 5, 6, 7, 6, 7, 8, 8, 9, 10] },
 ];
+
+const monthLabels = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
+
+const getBookMonthlySalesByYear = (bookId: string, year: number) => {
+  const selectedBook = bookSalesData.find((book) => book.id === bookId) ?? bookSalesData[0];
+  const yearOffset = year - 2026;
+  const growthFactor = 1 + yearOffset * 0.05;
+
+  return selectedBook.monthly.map((value, index) => {
+    const seasonalFactor = index % 4 === 0 ? 0.95 : index % 3 === 0 ? 1.08 : 1;
+    const count = Math.max(1, Math.round(value * growthFactor * seasonalFactor));
+    return { month: monthLabels[index], sold: count };
+  });
+};
 
 const AuthorRevenuePage = () => {
   const navigate = useNavigate();
   const [chartType, setChartType] = useState<"revenue" | "sales">("revenue");
   const [selectedYear, setSelectedYear] = useState(2026);
+  const [selectedBookId, setSelectedBookId] = useState(bookSalesData[0].id);
 
   useEffect(() => {
     if (!isLoggedIn()) navigate("/login");
   }, [navigate]);
 
   const revenueData = useMemo(() => getRevenueDataByYear(selectedYear), [selectedYear]);
+  const selectedBook = useMemo(
+    () => bookSalesData.find((book) => book.id === selectedBookId) ?? bookSalesData[0],
+    [selectedBookId],
+  );
+  const selectedBookMonthlySales = useMemo(
+    () => getBookMonthlySalesByYear(selectedBookId, selectedYear),
+    [selectedBookId, selectedYear],
+  );
 
   const maxMonthlyRevenue = Math.max(...revenueData.map((item) => item.revenue));
-  const maxBookSales = Math.max(...bookSalesData.map((item) => item.sold));
+  const maxMonthlyBookSales = Math.max(...selectedBookMonthlySales.map((item) => item.sold));
 
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6">
@@ -148,24 +171,63 @@ const AuthorRevenuePage = () => {
                 <BookOpen size={20} className="text-secondary" />
                 책별 판매량 그래프
               </h2>
-              <div className="space-y-4">
-                {bookSalesData.map((book, index) => {
-                  const widthRatio = (book.sold / maxBookSales) * 100;
+              <div className="flex items-center justify-center gap-4 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setSelectedYear((prev) => prev - 1)}
+                  className="w-9 h-9 rounded-full bg-surface-container border border-outline-variant/30 text-on-surface hover:bg-surface-container-high transition-colors"
+                  aria-label="이전 연도"
+                >
+                  {"<"}
+                </button>
+                <p className="text-lg md:text-xl font-headline font-bold text-on-surface min-w-20 text-center">
+                  {selectedYear}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSelectedYear((prev) => prev + 1)}
+                  className="w-9 h-9 rounded-full bg-surface-container border border-outline-variant/30 text-on-surface hover:bg-surface-container-high transition-colors"
+                  aria-label="다음 연도"
+                >
+                  {">"}
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-5">
+                {bookSalesData.map((book) => (
+                  <button
+                    key={book.id}
+                    type="button"
+                    onClick={() => setSelectedBookId(book.id)}
+                    className={`px-3 py-1.5 rounded-full text-sm font-bold transition-colors ${
+                      selectedBookId === book.id
+                        ? "bg-secondary text-on-primary"
+                        : "bg-surface-container text-on-surface-variant hover:text-on-surface"
+                    }`}
+                  >
+                    {book.title}
+                  </button>
+                ))}
+              </div>
+
+              <p className="text-sm text-on-surface-variant mb-3">
+                <span className="font-bold text-on-surface">{selectedBook.title}</span>의 월별 판매 권수
+              </p>
+
+              <div className="h-72 flex items-end gap-2 md:gap-3">
+                {selectedBookMonthlySales.map((item, index) => {
+                  const heightRatio = (item.sold / maxMonthlyBookSales) * 100;
                   return (
-                    <div key={book.id}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <p className="text-sm font-bold text-on-surface truncate pr-2">{book.title}</p>
-                        <p className="text-xs md:text-sm text-on-surface-variant">{book.sold}권</p>
-                      </div>
-                      <div className="h-3 rounded-full bg-surface-container overflow-hidden">
-                        <motion.div
-                          initial={{ scaleX: 0 }}
-                          animate={{ scaleX: 1 }}
-                          transition={{ duration: 0.65, ease: "easeOut", delay: index * 0.09 }}
-                          style={{ transformOrigin: "left", width: `${Math.max(widthRatio, 8)}%` }}
-                          className="h-full rounded-full bg-gradient-to-r from-secondary to-tertiary"
-                        />
-                      </div>
+                    <div key={`${selectedBookId}-${selectedYear}-${item.month}`} className="flex-1 h-full flex flex-col justify-end items-center">
+                      <p className="text-[10px] md:text-xs text-on-surface-variant mb-2">{item.sold}권</p>
+                      <motion.div
+                        initial={{ scaleY: 0 }}
+                        animate={{ scaleY: 1 }}
+                        transition={{ duration: 0.6, ease: "easeOut", delay: index * 0.06 }}
+                        style={{ transformOrigin: "bottom", height: `${Math.max(heightRatio, 8)}%` }}
+                        className="w-full max-w-14 rounded-t-xl bg-gradient-to-t from-secondary to-tertiary shadow-sm"
+                      />
+                      <p className="text-xs md:text-sm text-on-surface-variant mt-2">{item.month}</p>
                     </div>
                   );
                 })}
