@@ -32,7 +32,7 @@ const mockBookPerformance = [
   { id: "4", title: "구름 위의 집", reads: 210, likes: 52, revenue: 48_000, isPaid: true, rating: 4.3 },
 ];
 
-type PerformanceSort = "reads" | "likes" | "rating" | "revenue";
+type PerformanceSort = "title" | "reads" | "likes" | "rating" | "revenue";
 
 const AuthorDashboardPage = () => {
   const navigate = useNavigate();
@@ -43,6 +43,9 @@ const AuthorDashboardPage = () => {
   }, [navigate]);
 
   const sortedBooks = useMemo(() => {
+    if (performanceSort === "title") {
+      return [...mockBookPerformance].sort((a, b) => a.title.localeCompare(b.title));
+    }
     return [...mockBookPerformance].sort((a, b) => b[performanceSort] - a[performanceSort]);
   }, [performanceSort]);
 
@@ -105,35 +108,27 @@ const AuthorDashboardPage = () => {
               <BarChart3 size={20} className="text-primary" />
               작품별 성과
             </h2>
-            <div className="flex flex-wrap gap-2">
-              {([
-                { key: "reads", label: "조회수" },
-                { key: "likes", label: "좋아요" },
-                { key: "rating", label: "평점" },
-                { key: "revenue", label: "수익" },
-              ] as const).map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => setPerformanceSort(item.key)}
-                  className={`px-3 py-1.5 rounded-full text-xs md:text-sm font-bold transition-colors ${
-                    performanceSort === item.key
-                      ? "bg-primary text-on-primary"
-                      : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
           </div>
 
           <div className="hidden md:grid grid-cols-12 gap-4 px-4 pb-3 text-xs font-bold text-on-surface-variant uppercase tracking-wider">
-            <div className="col-span-4">작품</div>
-            <div className="col-span-2 text-right">조회수</div>
-            <div className="col-span-2 text-right">좋아요</div>
-            <div className="col-span-2 text-right">평점</div>
-            <div className="col-span-2 text-right">수익</div>
+            {([
+              { key: "title", label: "작품", className: "col-span-4 text-left" },
+              { key: "reads", label: "조회수", className: "col-span-2 text-right" },
+              { key: "likes", label: "좋아요", className: "col-span-2 text-right" },
+              { key: "rating", label: "평점", className: "col-span-2 text-right" },
+              { key: "revenue", label: "수익", className: "col-span-2 text-right" },
+            ] as const).map((header) => (
+              <button
+                key={header.key}
+                type="button"
+                onClick={() => setPerformanceSort(header.key)}
+                className={`${header.className} hover:text-on-surface transition-colors ${
+                  performanceSort === header.key ? "text-primary" : ""
+                }`}
+              >
+                {header.label}
+              </button>
+            ))}
           </div>
 
           <div className="space-y-3">
