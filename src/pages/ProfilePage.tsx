@@ -1,13 +1,16 @@
 ﻿import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Palette, Heart, ChevronRight, Globe, FileText, LogOut, Settings } from "lucide-react";
+import { Palette, Heart } from "lucide-react";
 import { MOCK_BOOKS } from "../constants";
-import { logout, fetchUserMe, isLoggedIn, type UserInfo } from "../lib/auth";
+import { fetchUserMe, isLoggedIn, type UserInfo } from "../lib/auth";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const likedCount = MOCK_BOOKS.length;
+  const thisWeekLikes = Math.max(1, Math.floor(likedCount / 4));
+  const recentLikedTitle = MOCK_BOOKS[0]?.title ?? "-";
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -24,11 +27,6 @@ const ProfilePage = () => {
       setLoading(false);
     });
   }, [navigate]);
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/");
-  };
 
   if (loading) {
     return (
@@ -81,7 +79,6 @@ const ProfilePage = () => {
                 <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-on-surface-variant">받은 좋아요</p>
               </div>
             </div>
-
           </div>
 
           <div className="flex flex-col gap-3 w-full md:w-auto">
@@ -115,65 +112,25 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 gap-6 md:gap-8">
           <div className="glass p-6 md:p-8 rounded-3xl space-y-6">
             <h3 className="text-lg md:text-xl font-bold flex items-center gap-2">
               <Heart size={20} className="text-red-500 fill-red-500" />
               좋아요 한 이야기
             </h3>
-            <div className="space-y-4">
-              {MOCK_BOOKS.slice(0, 2).map((book) => (
-                <div key={book.id} className="flex items-center gap-4 group cursor-pointer">
-                  <div className="w-12 md:w-16 aspect-[3/4] rounded-lg overflow-hidden shadow-md flex-shrink-0">
-                    <img
-                      src={book.coverUrl}
-                      alt={book.title}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-bold group-hover:text-primary transition-colors truncate text-sm md:text-base">{book.title}</h4>
-                    <p className="text-[10px] md:text-xs text-on-surface-variant">{book.author} 작가</p>
-                  </div>
-                  <ChevronRight size={20} className="text-on-surface-variant flex-shrink-0" />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="glass p-6 md:p-8 rounded-3xl space-y-6">
-            <h3 className="text-lg md:text-xl font-bold flex items-center gap-2">
-              <Settings size={20} className="text-primary" />
-              계정 설정
-            </h3>
-            <div className="space-y-2">
-              <button className="w-full flex items-center justify-between p-3 md:p-4 rounded-xl hover:bg-white transition-all text-sm md:text-base">
-                <div className="flex items-center gap-3">
-                  <Globe size={20} className="text-on-surface-variant" />
-                  <span className="font-medium">언어 설정</span>
-                </div>
-                <span className="text-xs md:text-sm font-bold text-primary">한국어</span>
-              </button>
-
-              <button className="w-full flex items-center justify-between p-3 md:p-4 rounded-xl hover:bg-white transition-all text-sm md:text-base">
-                <div className="flex items-center gap-3">
-                  <FileText size={20} className="text-on-surface-variant" />
-                  <span className="font-medium">구독 플랜</span>
-                </div>
-                <span className="text-xs md:text-sm font-bold text-primary">매직 프로</span>
-              </button>
-
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center justify-between p-3 md:p-4 rounded-xl hover:bg-red-50 text-red-500 transition-all mt-4 text-sm md:text-base"
-              >
-                <div className="flex items-center gap-3">
-                  <LogOut size={20} />
-                  <span className="font-bold">로그아웃</span>
-                </div>
-              </button>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+              <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
+                <p className="text-xs text-on-surface-variant">총 좋아요</p>
+                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">{likedCount}</p>
+              </div>
+              <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
+                <p className="text-xs text-on-surface-variant">이번 주 추가</p>
+                <p className="mt-1 text-2xl md:text-3xl font-extrabold text-on-surface">+{thisWeekLikes}</p>
+              </div>
+              <div className="rounded-2xl bg-surface-container-low p-4 border border-outline-variant/20">
+                <p className="text-xs text-on-surface-variant">최근 좋아요</p>
+                <p className="mt-1 text-sm md:text-base font-bold text-on-surface truncate">{recentLikedTitle}</p>
+              </div>
             </div>
           </div>
         </div>
