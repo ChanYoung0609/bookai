@@ -214,7 +214,7 @@ const AuthorSection = ({ title, icon, items }: AuthorSectionProps) => {
                   <img
                     src={`https://picsum.photos/seed/author-${item.id}/96/96`}
                     alt={`${item.name} 프로필`}
-                    className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border-2 border-white shadow-sm"
+                    className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-2 border-white shadow-sm"
                     loading="lazy"
                     decoding="async"
                   />
@@ -289,7 +289,7 @@ const BookSection = ({ title, icon, items, metric }: BookSectionProps) => {
                   <img
                     src={item.coverImageUrl}
                     alt={`${item.title} 표지`}
-                    className="w-[52px] h-[68px] md:w-[60px] md:h-[84px] rounded-lg object-cover border-2 border-white shadow-sm"
+                    className="w-[62px] h-[82px] md:w-[72px] md:h-[100px] rounded-lg object-cover border-2 border-white shadow-sm"
                     loading="lazy"
                     decoding="async"
                   />
