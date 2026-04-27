@@ -1,21 +1,30 @@
 ﻿import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
 import { Sparkles, BookOpen, Users, Flag, X } from "lucide-react";
-import { fetchBookDetail, type BookDetail } from "../lib/api";
+import { fetchBookDetail, reportBook, type BookDetail, type ReportReason } from "../lib/api";
+import { isLoggedIn } from "../lib/auth";
 
-const reportReasons = ["스팸/광고", "부적절한 내용", "저작권 침해", "기타"] as const;
+const reportReasons: ReadonlyArray<{ label: string; value: ReportReason }> = [
+  { label: "스팸/광고", value: "SPAM" },
+  { label: "부적절한 내용", value: "INAPPROPRIATE" },
+  { label: "저작권 침해", value: "COPYRIGHT" },
+  { label: "기타", value: "OTHER" },
+];
 
 const BookDetailPage = () => {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [book, setBook] = useState<BookDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   const [isReportOpen, setIsReportOpen] = useState(false);
-  const [reportReason, setReportReason] = useState<(typeof reportReasons)[number]>("스팸/광고");
+  const [reportReason, setReportReason] = useState<ReportReason>("SPAM");
   const [reportDetail, setReportDetail] = useState("");
-  const [reportDone, setReportDone] = useState(false);
+  const [reportDoneMessage, setReportDoneMessage] = useState<string | null>(null);
+  const [reportErrorMessage, setReportErrorMessage] = useState<string | null>(null);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -29,13 +38,36 @@ const BookDetailPage = () => {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleSubmitReport = (e: React.FormEvent) => {
+  const handleSubmitReport = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsReportOpen(false);
-    setReportDone(true);
-    setReportDetail("");
-    setReportReason("스팸/광고");
-    window.setTimeout(() => setReportDone(false), 2500);
+
+    if (!book?.bookId) return;
+
+    if (!isLoggedIn()) {
+      setIsReportOpen(false);
+      navigate("/login");
+      return;
+    }
+
+    setReportSubmitting(true);
+    setReportErrorMessage(null);
+
+    try {
+      const message = await reportBook(book.bookId, {
+        reason: reportReason,
+        detail: reportDetail.trim() || undefined,
+      });
+
+      setIsReportOpen(false);
+      setReportDoneMessage(message);
+      setReportDetail("");
+      setReportReason("SPAM");
+      window.setTimeout(() => setReportDoneMessage(null), 2500);
+    } catch (err) {
+      setReportErrorMessage(err instanceof Error ? err.message : "신고 접수에 실패했습니다.");
+    } finally {
+      setReportSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -64,7 +96,10 @@ const BookDetailPage = () => {
           <div className="flex justify-end">
             <button
               type="button"
-              onClick={() => setIsReportOpen(true)}
+              onClick={() => {
+                setReportErrorMessage(null);
+                setIsReportOpen(true);
+              }}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-red-300 bg-red-50 text-red-600 font-bold hover:bg-red-100 transition-colors"
             >
               <Flag size={16} />
@@ -72,9 +107,9 @@ const BookDetailPage = () => {
             </button>
           </div>
 
-          {reportDone && (
+          {reportDoneMessage && (
             <div className="rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary font-bold">
-              신고가 접수되었습니다. 검토 후 조치할게요.
+              {reportDoneMessage}
             </div>
           )}
 
@@ -204,11 +239,11 @@ const BookDetailPage = () => {
       </div>
 
       {isReportOpen && (
-        <div className="fixed inset-0 z-[90] bg-black/55 px-4 flex items-center justify-center" onClick={() => setIsReportOpen(false)}>
+        <div className="fixed inset-0 z-[90] bg-black/55 px-4 flex items-center justify-center" onClick={() => !reportSubmitting && setIsReportOpen(false)}>
           <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6 space-y-5" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-on-surface">작품 신고</h2>
-              <button type="button" onClick={() => setIsReportOpen(false)} className="text-on-surface-variant hover:text-on-surface">
+              <button type="button" onClick={() => setIsReportOpen(false)} disabled={reportSubmitting} className="text-on-surface-variant hover:text-on-surface disabled:opacity-50">
                 <X size={20} />
               </button>
             </div>
@@ -219,16 +254,16 @@ const BookDetailPage = () => {
                 <div className="grid grid-cols-2 gap-2">
                   {reportReasons.map((reason) => (
                     <button
-                      key={reason}
+                      key={reason.value}
                       type="button"
-                      onClick={() => setReportReason(reason)}
+                      onClick={() => setReportReason(reason.value)}
                       className={`px-3 py-2 rounded-lg text-sm font-bold border transition-colors ${
-                        reportReason === reason
+                        reportReason === reason.value
                           ? "bg-red-100 border-red-300 text-red-700"
                           : "bg-surface-container-lowest border-outline-variant/30 text-on-surface-variant hover:bg-surface-container"
                       }`}
                     >
-                      {reason}
+                      {reason.label}
                     </button>
                   ))}
                 </div>
@@ -252,14 +287,17 @@ const BookDetailPage = () => {
                 <button
                   type="button"
                   onClick={() => setIsReportOpen(false)}
-                  className="flex-1 py-3 rounded-xl border border-outline-variant/40 text-on-surface-variant font-bold hover:bg-surface-container-low"
+                  disabled={reportSubmitting}
+                  className="flex-1 py-3 rounded-xl border border-outline-variant/40 text-on-surface-variant font-bold hover:bg-surface-container-low disabled:opacity-50"
                 >
                   취소
                 </button>
-                <button type="submit" className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700">
-                  신고 접수
+                <button type="submit" disabled={reportSubmitting} className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 disabled:opacity-50">
+                  {reportSubmitting ? "접수 중..." : "신고 접수"}
                 </button>
               </div>
+
+              {reportErrorMessage && <p className="text-sm text-red-600 font-bold">{reportErrorMessage}</p>}
             </form>
           </div>
         </div>
@@ -269,4 +307,3 @@ const BookDetailPage = () => {
 };
 
 export default BookDetailPage;
-
