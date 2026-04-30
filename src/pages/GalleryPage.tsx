@@ -224,9 +224,7 @@ const GalleryPage = () => {
               >
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
+                  onClick={() => {
                     void toggleLike(book.bookId);
                   }}
                   disabled={liking}
