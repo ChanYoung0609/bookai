@@ -1,13 +1,13 @@
-﻿import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { BookOpen, Search, SlidersHorizontal, X, Heart } from "lucide-react";
-import { fetchBooks, type BookItem } from "../lib/api";
+import { addBookLike, fetchBooks, removeBookLike, type BookItem } from "../lib/api";
 
 const PAGE_SIZE = 12;
 type SortOption = "newest" | "titleAsc" | "titleDesc";
 
-type LikedMap = Record<string, boolean>;
+type LikeLoadingMap = Record<string, boolean>;
 
 const GalleryPage = () => {
   const [books, setBooks] = useState<BookItem[]>([]);
@@ -16,13 +16,16 @@ const GalleryPage = () => {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortOption>("newest");
   const [showFilters, setShowFilters] = useState(false);
-  const [likedMap, setLikedMap] = useState<LikedMap>({});
+  const [likeLoadingMap, setLikeLoadingMap] = useState<LikeLoadingMap>({});
+  const [likeErrorMessage, setLikeErrorMessage] = useState<string | null>(null);
+
   const observerRef = useRef<HTMLDivElement>(null);
   const animatedIdsRef = useRef<Set<string>>(new Set());
   const pageRef = useRef(0);
   const loadingRef = useRef(false);
   const hasMoreRef = useRef(true);
   const loadedPagesRef = useRef<Set<number>>(new Set());
+  const likeErrorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadMore = useCallback(async () => {
     const targetPage = pageRef.current;
@@ -34,11 +37,13 @@ const GalleryPage = () => {
     try {
       loadedPagesRef.current.add(targetPage);
       const data = await fetchBooks(targetPage, PAGE_SIZE);
+
       setBooks((prev) => {
         const map = new Map(prev.map((b) => [b.bookId, b]));
         data.content.forEach((b) => map.set(b.bookId, b));
         return Array.from(map.values());
       });
+
       const nextHasMore = !data.last;
       hasMoreRef.current = nextHasMore;
       setHasMore(nextHasMore);
@@ -46,7 +51,6 @@ const GalleryPage = () => {
         pageRef.current = targetPage + 1;
       }
     } catch {
-      // API 실패 시 더 이상 로드하지 않음
       hasMoreRef.current = false;
       setHasMore(false);
     } finally {
@@ -72,6 +76,12 @@ const GalleryPage = () => {
     return () => observer.disconnect();
   }, [loadMore]);
 
+  useEffect(() => {
+    return () => {
+      if (likeErrorTimerRef.current) clearTimeout(likeErrorTimerRef.current);
+    };
+  }, []);
+
   const visibleBooks = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     let result = books;
@@ -89,15 +99,31 @@ const GalleryPage = () => {
     } else if (sort === "titleDesc") {
       result = [...result].sort((a, b) => b.title.localeCompare(a.title));
     }
-    // "newest"는 API가 반환한 순서를 그대로 사용 (클라이언트 재정렬 금지)
 
     return result;
   }, [books, query, sort]);
 
   const isSearching = query.trim().length > 0;
 
-  const toggleLike = (bookId: string) => {
-    setLikedMap((prev) => ({ ...prev, [bookId]: !prev[bookId] }));
+  const toggleLike = async (bookId: string) => {
+    if (likeLoadingMap[bookId]) return;
+
+    const book = books.find((b) => b.bookId === bookId);
+    const liked = book?.liked ?? false;
+
+    setLikeLoadingMap((prev) => ({ ...prev, [bookId]: true }));
+
+    try {
+      const status = liked ? await removeBookLike(bookId) : await addBookLike(bookId);
+      setBooks((prev) => prev.map((b) => (b.bookId === bookId ? { ...b, liked: status.likedByMe } : b)));
+    } catch (error) {
+      console.error("좋아요 처리 실패:", error);
+      setLikeErrorMessage(error instanceof Error ? error.message : "좋아요 처리에 실패했습니다.");
+      if (likeErrorTimerRef.current) clearTimeout(likeErrorTimerRef.current);
+      likeErrorTimerRef.current = setTimeout(() => setLikeErrorMessage(null), 2500);
+    } finally {
+      setLikeLoadingMap((prev) => ({ ...prev, [bookId]: false }));
+    }
   };
 
   return (
@@ -176,15 +202,18 @@ const GalleryPage = () => {
           )}
 
           <p className="text-sm text-on-surface-variant">
-            {isSearching ? `\"${query}\" 검색 결과` : "전체 작품"} ({visibleBooks.length}개)
+            {isSearching ? `"${query}" 검색 결과` : "전체 작품"} ({visibleBooks.length}개)
           </p>
+          {likeErrorMessage && <p className="text-sm text-red-600 font-bold">{likeErrorMessage}</p>}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
           {visibleBooks.map((book, i) => {
-            const liked = likedMap[book.bookId] ?? false;
+            const liked = book.liked ?? false;
+            const liking = likeLoadingMap[book.bookId] ?? false;
             const alreadyAnimated = animatedIdsRef.current.has(book.bookId);
             if (!alreadyAnimated) animatedIdsRef.current.add(book.bookId);
+
             return (
               <motion.div
                 key={book.bookId}
@@ -209,13 +238,14 @@ const GalleryPage = () => {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        toggleLike(book.bookId);
+                        void toggleLike(book.bookId);
                       }}
+                      disabled={liking}
                       className={`absolute right-2 bottom-2 z-20 w-10 h-10 rounded-full flex items-center justify-center border backdrop-blur-sm transition-all ${
                         liked
                           ? "bg-rose-500/95 border-rose-400 text-white"
                           : "bg-white/90 border-white text-rose-500 hover:bg-white"
-                      }`}
+                      } ${liking ? "opacity-70" : ""}`}
                       aria-label={liked ? "좋아요 취소" : "좋아요"}
                     >
                       <Heart size={18} className={liked ? "fill-current" : ""} />

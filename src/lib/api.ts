@@ -1,12 +1,11 @@
 import { fetchWithAuth } from "./auth";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mongle.cloud';
-
 export interface BookItem {
   bookId: string;
   title: string;
   coverImageUrl: string;
   authorName: string;
+  liked?: boolean;
 }
 
 export interface PageResponse<T> {
@@ -20,10 +19,16 @@ export interface PageResponse<T> {
 }
 
 export async function fetchBooks(page: number, size: number): Promise<PageResponse<BookItem>> {
-  const res = await fetch(`${API_BASE_URL}/api/books?page=${page}&size=${size}`);
-  if (!res.ok) throw new Error('Failed to fetch books');
-  const json = await res.json();
-  return json.data;
+  const res = await fetchWithAuth(`/api/books?page=${page}&size=${size}`, {
+    method: "GET",
+  });
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok || !json?.success || !json?.data) {
+    throw new Error(json?.error?.message || "Failed to fetch books");
+  }
+
+  return json.data as PageResponse<BookItem>;
 }
 
 export interface BookDetailPage {
@@ -48,10 +53,16 @@ export interface BookDetail {
 }
 
 export async function fetchBookDetail(bookId: string): Promise<BookDetail> {
-  const res = await fetch(`${API_BASE_URL}/api/books/${bookId}`);
-  if (!res.ok) throw new Error('Failed to fetch book detail');
-  const json = await res.json();
-  return json.data;
+  const res = await fetchWithAuth(`/api/books/${bookId}`, {
+    method: "GET",
+  });
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok || !json?.success || !json?.data) {
+    throw new Error(json?.error?.message || "Failed to fetch book detail");
+  }
+
+  return json.data as BookDetail;
 }
 
 export type ReportReason = "SPAM" | "INAPPROPRIATE" | "COPYRIGHT" | "OTHER";
@@ -88,4 +99,44 @@ export async function reportBook(bookId: string, payload: ReportBookRequest): Pr
   }
 
   return json?.data || "신고가 등록되었습니다.";
+}
+
+export interface BookLikeStatus {
+  bookId: string;
+  likeCount: number;
+  likedByMe: boolean;
+}
+
+export async function fetchBookLikeStatus(bookId: string): Promise<BookLikeStatus> {
+  const res = await fetchWithAuth(`/api/books/${bookId}/likes`, { method: "GET" });
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok || !json?.success || !json?.data) {
+    throw new Error(json?.error?.message || "좋아요 상태 조회에 실패했습니다.");
+  }
+
+  return json.data as BookLikeStatus;
+}
+
+async function handleBookLikeAction(
+  bookId: string,
+  method: "POST" | "DELETE",
+  fallbackMessage: string
+): Promise<BookLikeStatus> {
+  const res = await fetchWithAuth(`/api/books/${bookId}/likes`, { method });
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok || !json?.success || !json?.data) {
+    throw new Error(json?.error?.message || fallbackMessage);
+  }
+
+  return json.data as BookLikeStatus;
+}
+
+export async function addBookLike(bookId: string): Promise<BookLikeStatus> {
+  return handleBookLikeAction(bookId, "POST", "좋아요 처리에 실패했습니다.");
+}
+
+export async function removeBookLike(bookId: string): Promise<BookLikeStatus> {
+  return handleBookLikeAction(bookId, "DELETE", "좋아요 취소에 실패했습니다.");
 }
