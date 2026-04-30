@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+﻿import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { BookOpen, Search, SlidersHorizontal, X, Heart } from "lucide-react";
@@ -131,11 +131,11 @@ const GalleryPage = () => {
       <div className="max-w-7xl mx-auto space-y-8 md:space-y-12">
         <div className="space-y-4">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-headline font-extrabold leading-tight tracking-tight text-on-surface">
-            무한한 세계, <br />
-            <span className="text-primary italic">한 페이지씩</span> 완성돼요
+            무한한 이야기의 세계, <br />
+            <span className="text-primary italic">갤러리</span>에서 완성해요
           </h1>
           <p className="text-on-surface-variant text-base md:text-lg max-w-xl">
-            우리 커뮤니티가 만든 AI 생성 이야기를 만나보세요. 깊은 우주부터 마법의 숲까지 준비되어 있어요.
+            우리 커뮤니티가 만든 AI 생성 이야기를 만나보세요. 동화부터 모험까지 다양한 작품이 준비되어 있어요.
           </p>
         </div>
 
@@ -220,8 +220,26 @@ const GalleryPage = () => {
                 initial={alreadyAnimated ? false : { opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: alreadyAnimated ? 0 : (i % 4) * 0.05 }}
-                className="group cursor-pointer"
+                className="group cursor-pointer relative"
               >
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    void toggleLike(book.bookId);
+                  }}
+                  disabled={liking}
+                  className={`absolute right-2 bottom-2 z-30 w-10 h-10 rounded-full flex items-center justify-center border backdrop-blur-sm transition-all ${
+                    liked
+                      ? "bg-rose-500/95 border-rose-400 text-white"
+                      : "bg-white/90 border-white text-rose-500 hover:bg-white"
+                  } ${liking ? "opacity-70" : ""}`}
+                  aria-label={liked ? "좋아요 취소" : "좋아요"}
+                >
+                  <Heart size={18} className={liked ? "fill-current" : ""} />
+                </button>
+
                 <Link to={`/book/${book.bookId}`} className="flex flex-row sm:flex-col gap-4 sm:gap-0">
                   <div className="relative w-1/3 sm:w-full aspect-[3/4] rounded-2xl overflow-hidden book-shadow sm:mb-4 group-hover:-translate-y-2 transition-transform duration-500 flex-shrink-0">
                     <img
@@ -232,24 +250,6 @@ const GalleryPage = () => {
                       decoding="async"
                       referrerPolicy="no-referrer"
                     />
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        void toggleLike(book.bookId);
-                      }}
-                      disabled={liking}
-                      className={`absolute right-2 bottom-2 z-20 w-10 h-10 rounded-full flex items-center justify-center border backdrop-blur-sm transition-all ${
-                        liked
-                          ? "bg-rose-500/95 border-rose-400 text-white"
-                          : "bg-white/90 border-white text-rose-500 hover:bg-white"
-                      } ${liking ? "opacity-70" : ""}`}
-                      aria-label={liked ? "좋아요 취소" : "좋아요"}
-                    >
-                      <Heart size={18} className={liked ? "fill-current" : ""} />
-                    </button>
 
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
                       <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary scale-0 group-hover:scale-100 transition-transform duration-500">
@@ -282,7 +282,7 @@ const GalleryPage = () => {
 
         {isSearching && hasMore && (
           <p className="text-center text-xs text-on-surface-variant/70">
-            다음 페이지를 불러오는 중입니다. 검색 결과는 더 늘어날 수 있어요.
+            다음 페이지를 불러오는 중입니다. 검색 결과도 계속 확장돼요.
           </p>
         )}
       </div>
