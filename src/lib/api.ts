@@ -1,4 +1,4 @@
-﻿import { fetchWithAuth, getAccessToken } from "./auth";
+﻿import { fetchWithAuth } from "./auth";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://mongle.cloud";
 
@@ -97,17 +97,9 @@ export interface BookLikeStatus {
 }
 
 export async function fetchBookLikeStatus(bookId: string): Promise<BookLikeStatus> {
-  const headers = new Headers();
-  const token = getAccessToken();
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-
-  const res = await fetch(`${API_BASE_URL}/api/books/${bookId}/likes`, {
-    method: "GET",
-    headers,
-    credentials: "include",
-  });
-
+  const res = await fetchWithAuth(`/api/books/${bookId}/likes`, { method: "GET" });
   const json = await res.json().catch(() => null);
+
   if (!res.ok || !json?.success || !json?.data) {
     throw new Error(json?.error?.message || "좋아요 상태 조회에 실패했습니다.");
   }
@@ -115,24 +107,25 @@ export async function fetchBookLikeStatus(bookId: string): Promise<BookLikeStatu
   return json.data as BookLikeStatus;
 }
 
-export async function addBookLike(bookId: string): Promise<BookLikeStatus> {
-  const res = await fetchWithAuth(`/api/books/${bookId}/likes`, { method: "POST" });
+async function handleBookLikeAction(
+  bookId: string,
+  method: "POST" | "DELETE",
+  fallbackMessage: string
+): Promise<BookLikeStatus> {
+  const res = await fetchWithAuth(`/api/books/${bookId}/likes`, { method });
   const json = await res.json().catch(() => null);
 
   if (!res.ok || !json?.success || !json?.data) {
-    throw new Error(json?.error?.message || "좋아요 처리에 실패했습니다.");
+    throw new Error(json?.error?.message || fallbackMessage);
   }
 
   return json.data as BookLikeStatus;
 }
 
+export async function addBookLike(bookId: string): Promise<BookLikeStatus> {
+  return handleBookLikeAction(bookId, "POST", "좋아요 처리에 실패했습니다.");
+}
+
 export async function removeBookLike(bookId: string): Promise<BookLikeStatus> {
-  const res = await fetchWithAuth(`/api/books/${bookId}/likes`, { method: "DELETE" });
-  const json = await res.json().catch(() => null);
-
-  if (!res.ok || !json?.success || !json?.data) {
-    throw new Error(json?.error?.message || "좋아요 취소에 실패했습니다.");
-  }
-
-  return json.data as BookLikeStatus;
+  return handleBookLikeAction(bookId, "DELETE", "좋아요 취소에 실패했습니다.");
 }

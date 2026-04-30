@@ -27,12 +27,14 @@ const GalleryPage = () => {
   const [likedMap, setLikedMap] = useState<LikedMap>({});
   const [likeCountMap, setLikeCountMap] = useState<LikeCountMap>({});
   const [likeLoadingMap, setLikeLoadingMap] = useState<LikeLoadingMap>({});
+  const [likeErrorMessage, setLikeErrorMessage] = useState<string | null>(null);
   const observerRef = useRef<HTMLDivElement>(null);
   const animatedIdsRef = useRef<Set<string>>(new Set());
   const pageRef = useRef(0);
   const loadingRef = useRef(false);
   const hasMoreRef = useRef(true);
   const loadedPagesRef = useRef<Set<number>>(new Set());
+  const initializedLikeIdsRef = useRef<Set<string>>(new Set());
 
   const loadMore = useCallback(async () => {
     const targetPage = pageRef.current;
@@ -82,8 +84,9 @@ const GalleryPage = () => {
   }, [loadMore]);
 
   useEffect(() => {
-    const targets = books.filter((book) => likedMap[book.bookId] === undefined || likeCountMap[book.bookId] === undefined);
+    const targets = books.filter((book) => !initializedLikeIdsRef.current.has(book.bookId));
     if (targets.length === 0) return;
+    targets.forEach((book) => initializedLikeIdsRef.current.add(book.bookId));
 
     let cancelled = false;
 
@@ -116,7 +119,7 @@ const GalleryPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [books, likedMap, likeCountMap]);
+  }, [books]);
 
   const visibleBooks = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -151,8 +154,10 @@ const GalleryPage = () => {
       const status = liked ? await removeBookLike(bookId) : await addBookLike(bookId);
       setLikedMap((prev) => ({ ...prev, [bookId]: status.likedByMe }));
       setLikeCountMap((prev) => ({ ...prev, [bookId]: status.likeCount }));
-    } catch {
-      // 실패 시 기존 상태 유지
+    } catch (error) {
+      console.error("좋아요 처리 실패:", error);
+      setLikeErrorMessage(error instanceof Error ? error.message : "좋아요 처리에 실패했습니다.");
+      window.setTimeout(() => setLikeErrorMessage(null), 2500);
     } finally {
       setLikeLoadingMap((prev) => ({ ...prev, [bookId]: false }));
     }
@@ -236,6 +241,7 @@ const GalleryPage = () => {
           <p className="text-sm text-on-surface-variant">
             {isSearching ? `"${query}" 검색 결과` : "전체 작품"} ({visibleBooks.length}개)
           </p>
+          {likeErrorMessage && <p className="text-sm text-red-600 font-bold">{likeErrorMessage}</p>}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
