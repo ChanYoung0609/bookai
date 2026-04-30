@@ -106,6 +106,9 @@ const GalleryPage = () => {
   const isSearching = query.trim().length > 0;
 
   const toggleLike = async (bookId: string) => {
+    if (import.meta.env.DEV) {
+      console.log("[likes] toggleLike clicked:", bookId);
+    }
     if (likeLoadingMap[bookId]) return;
 
     const book = books.find((b) => b.bookId === bookId);
@@ -224,7 +227,8 @@ const GalleryPage = () => {
               >
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     void toggleLike(book.bookId);
                   }}
                   disabled={liking}
