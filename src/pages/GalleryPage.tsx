@@ -106,9 +106,6 @@ const GalleryPage = () => {
   const isSearching = query.trim().length > 0;
 
   const toggleLike = async (bookId: string) => {
-    if (import.meta.env.DEV) {
-      console.log("[likes] toggleLike clicked:", bookId);
-    }
     if (likeLoadingMap[bookId]) return;
 
     const book = books.find((b) => b.bookId === bookId);
@@ -223,48 +220,53 @@ const GalleryPage = () => {
                 initial={alreadyAnimated ? false : { opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: alreadyAnimated ? 0 : (i % 4) * 0.05 }}
-                className="group cursor-pointer relative"
+                className="group cursor-pointer"
               >
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    void toggleLike(book.bookId);
-                  }}
-                  disabled={liking}
-                  className={`absolute right-2 bottom-2 z-30 w-10 h-10 rounded-full flex items-center justify-center border backdrop-blur-sm transition-all ${
-                    liked
-                      ? "bg-rose-500/95 border-rose-400 text-white"
-                      : "bg-white/90 border-white text-rose-500 hover:bg-white"
-                  } ${liking ? "opacity-70" : ""}`}
-                  aria-label={liked ? "좋아요 취소" : "좋아요"}
-                >
-                  <Heart size={18} className={liked ? "fill-current" : ""} />
-                </button>
+                <div className="flex flex-row sm:flex-col gap-4 sm:gap-0">
+                  <div className="relative w-1/3 sm:w-full aspect-[3/4] sm:mb-4 group-hover:-translate-y-2 transition-transform duration-500 flex-shrink-0">
+                    <Link
+                      to={`/book/${book.bookId}`}
+                      className="absolute inset-0 rounded-2xl overflow-hidden book-shadow"
+                    >
+                      <img
+                        src={book.coverImageUrl}
+                        alt={book.title}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                      />
 
-                <Link to={`/book/${book.bookId}`} className="flex flex-row sm:flex-col gap-4 sm:gap-0">
-                  <div className="relative w-1/3 sm:w-full aspect-[3/4] rounded-2xl overflow-hidden book-shadow sm:mb-4 group-hover:-translate-y-2 transition-transform duration-500 flex-shrink-0">
-                    <img
-                      src={book.coverImageUrl}
-                      alt={book.title}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      decoding="async"
-                      referrerPolicy="no-referrer"
-                    />
-
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
-                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary scale-0 group-hover:scale-100 transition-transform duration-500">
-                        <BookOpen size={32} />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
+                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-primary scale-0 group-hover:scale-100 transition-transform duration-500">
+                          <BookOpen size={32} />
+                        </div>
                       </div>
-                    </div>
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={() => void toggleLike(book.bookId)}
+                      disabled={liking}
+                      className={`absolute right-2 bottom-2 z-30 w-10 h-10 rounded-full flex items-center justify-center border backdrop-blur-sm transition-all ${
+                        liked
+                          ? "bg-rose-500/95 border-rose-400 text-white"
+                          : "bg-white/90 border-white text-rose-500 hover:bg-white"
+                      } ${liking ? "opacity-70" : ""}`}
+                      aria-label={liked ? "좋아요 취소" : "좋아요"}
+                    >
+                      <Heart size={18} className={liked ? "fill-current" : ""} />
+                    </button>
                   </div>
 
-                  <div className="flex flex-col justify-center sm:justify-start flex-grow min-w-0">
+                  <Link
+                    to={`/book/${book.bookId}`}
+                    className="flex flex-col justify-center sm:justify-start flex-grow min-w-0"
+                  >
                     <h3 className="text-base sm:text-lg md:text-xl font-bold group-hover:text-primary transition-colors truncate sm:whitespace-normal">{book.title}</h3>
                     <p className="text-on-surface-variant text-xs sm:text-sm font-medium">{book.authorName} 작가</p>
-                  </div>
-                </Link>
+                  </Link>
+                </div>
               </motion.div>
             );
           })}
