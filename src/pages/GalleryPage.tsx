@@ -7,7 +7,6 @@ import { addBookLike, fetchBooks, removeBookLike, type BookItem } from "../lib/a
 const PAGE_SIZE = 12;
 type SortOption = "newest" | "titleAsc" | "titleDesc";
 
-type LikedMap = Record<string, boolean>;
 type LikeLoadingMap = Record<string, boolean>;
 
 const GalleryPage = () => {
@@ -17,7 +16,6 @@ const GalleryPage = () => {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortOption>("newest");
   const [showFilters, setShowFilters] = useState(false);
-  const [likedMap, setLikedMap] = useState<LikedMap>({});
   const [likeLoadingMap, setLikeLoadingMap] = useState<LikeLoadingMap>({});
   const [likeErrorMessage, setLikeErrorMessage] = useState<string | null>(null);
 
@@ -44,16 +42,6 @@ const GalleryPage = () => {
         const map = new Map(prev.map((b) => [b.bookId, b]));
         data.content.forEach((b) => map.set(b.bookId, b));
         return Array.from(map.values());
-      });
-
-      setLikedMap((prev) => {
-        const next = { ...prev };
-        data.content.forEach((b) => {
-          if (typeof b.liked === "boolean") {
-            next[b.bookId] = b.liked;
-          }
-        });
-        return next;
       });
 
       const nextHasMore = !data.last;
@@ -121,13 +109,12 @@ const GalleryPage = () => {
     if (likeLoadingMap[bookId]) return;
 
     const book = books.find((b) => b.bookId === bookId);
-    const liked = likedMap[bookId] ?? book?.liked ?? false;
+    const liked = book?.liked ?? false;
 
     setLikeLoadingMap((prev) => ({ ...prev, [bookId]: true }));
 
     try {
       const status = liked ? await removeBookLike(bookId) : await addBookLike(bookId);
-      setLikedMap((prev) => ({ ...prev, [bookId]: status.likedByMe }));
       setBooks((prev) => prev.map((b) => (b.bookId === bookId ? { ...b, liked: status.likedByMe } : b)));
     } catch (error) {
       console.error("좋아요 처리 실패:", error);
@@ -222,7 +209,7 @@ const GalleryPage = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
           {visibleBooks.map((book, i) => {
-            const liked = likedMap[book.bookId] ?? book.liked ?? false;
+            const liked = book.liked ?? false;
             const liking = likeLoadingMap[book.bookId] ?? false;
             const alreadyAnimated = animatedIdsRef.current.has(book.bookId);
             if (!alreadyAnimated) animatedIdsRef.current.add(book.bookId);

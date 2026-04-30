@@ -1,7 +1,5 @@
 import { fetchWithAuth } from "./auth";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://mongle.cloud";
-
 export interface BookItem {
   bookId: string;
   title: string;
@@ -55,10 +53,16 @@ export interface BookDetail {
 }
 
 export async function fetchBookDetail(bookId: string): Promise<BookDetail> {
-  const res = await fetch(`${API_BASE_URL}/api/books/${bookId}`);
-  if (!res.ok) throw new Error("Failed to fetch book detail");
-  const json = await res.json();
-  return json.data;
+  const res = await fetchWithAuth(`/api/books/${bookId}`, {
+    method: "GET",
+  });
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok || !json?.success || !json?.data) {
+    throw new Error(json?.error?.message || "Failed to fetch book detail");
+  }
+
+  return json.data as BookDetail;
 }
 
 export type ReportReason = "SPAM" | "INAPPROPRIATE" | "COPYRIGHT" | "OTHER";
