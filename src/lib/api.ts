@@ -123,6 +123,9 @@ async function handleBookLikeAction(
   method: "POST" | "DELETE",
   fallbackMessage: string
 ): Promise<BookLikeStatus> {
+  if (import.meta.env.DEV) {
+    console.log(`[likes] request ${method} /api/books/${bookId}/likes`);
+  }
   const res = await fetchWithAuth(`/api/books/${bookId}/likes`, { method });
   const json = await res.json().catch(() => null);
 

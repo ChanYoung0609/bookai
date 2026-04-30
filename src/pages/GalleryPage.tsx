@@ -224,6 +224,10 @@ const GalleryPage = () => {
               >
                 <button
                   type="button"
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
