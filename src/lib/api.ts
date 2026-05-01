@@ -1,4 +1,4 @@
-import { fetchWithAuth } from "./auth";
+ï»¿import { fetchWithAuth } from "./auth";
 
 export interface BookItem {
   bookId: string;
@@ -199,20 +199,46 @@ async function fetchRankingList<T>(path: string, fallbackMessage: string): Promi
 export async function fetchWeeklyProlificAuthors(params?: RankingDateParams): Promise<WeeklyProlificAuthorItem[]> {
   return fetchRankingList<WeeklyProlificAuthorItem>(
     `/api/ranking/weekly/prolific-authors${buildRankingQuery(params)}`,
-    "ÀÌ¹ø ÁÖ ´ÙÀÛ ÀÛ°¡ Á¶È¸¿¡ ½ÇÆĞÇß½À´Ï´Ù."
+    "ì´ë²ˆ ì£¼ ë‹¤ì‘ ì‘ê°€ ì¡°íšŒì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤."
   );
 }
 
 export async function fetchWeeklyPopularAuthors(params?: RankingDateParams): Promise<WeeklyPopularAuthorItem[]> {
   return fetchRankingList<WeeklyPopularAuthorItem>(
     `/api/ranking/weekly/popular-authors${buildRankingQuery(params)}`,
-    "ÀÌ¹ø ÁÖ ÀÎ±â ÀÛ°¡ Á¶È¸¿¡ ½ÇÆĞÇß½À´Ï´Ù."
+    "ì´ë²ˆ ì£¼ ì¸ê¸° ì‘ê°€ ì¡°íšŒì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤."
   );
 }
 
 export async function fetchWeeklyPopularBooks(params?: RankingDateParams): Promise<WeeklyPopularBookItem[]> {
   return fetchRankingList<WeeklyPopularBookItem>(
     `/api/ranking/weekly/popular-books${buildRankingQuery(params)}`,
-    "ÀÌ¹ø ÁÖ ÀÎ±â Ã¥ Á¶È¸¿¡ ½ÇÆĞÇß½À´Ï´Ù."
+    "ì´ë²ˆ ì£¼ ì¸ê¸° ì±… ì¡°íšŒì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤."
   );
 }
+
+export type MonthlyProlificAuthorItem = WeeklyProlificAuthorItem;
+export type MonthlyPopularAuthorItem = WeeklyPopularAuthorItem;
+export type MonthlyPopularBookItem = WeeklyPopularBookItem;
+
+export async function fetchMonthlyProlificAuthors(params?: Pick<RankingDateParams, "year" | "month">): Promise<MonthlyProlificAuthorItem[]> {
+  return fetchRankingList<MonthlyProlificAuthorItem>(
+    `/api/ranking/monthly/prolific-authors${buildRankingQuery(params)}`,
+    "ì´ë‹¬ì˜ ë‹¤ì‘ ì‘ê°€ ì¡°íšŒì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤."
+  );
+}
+
+export async function fetchMonthlyPopularAuthors(params?: Pick<RankingDateParams, "year" | "month">): Promise<MonthlyPopularAuthorItem[]> {
+  return fetchRankingList<MonthlyPopularAuthorItem>(
+    `/api/ranking/monthly/popular-authors${buildRankingQuery(params)}`,
+    "ì´ë‹¬ì˜ ì¸ê¸° ì‘ê°€ ì¡°íšŒì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤."
+  );
+}
+
+export async function fetchMonthlyPopularBooks(params?: Pick<RankingDateParams, "year" | "month">): Promise<MonthlyPopularBookItem[]> {
+  return fetchRankingList<MonthlyPopularBookItem>(
+    `/api/ranking/monthly/popular-books${buildRankingQuery(params)}`,
+    "ì´ë‹¬ì˜ ì¸ê¸° ì±… ì¡°íšŒì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤."
+  );
+}
+

@@ -3,9 +3,15 @@ import { Link } from "react-router-dom";
 import { BookOpen, Coins, Heart, Trophy } from "lucide-react";
 import { motion } from "motion/react";
 import {
+  fetchMonthlyPopularAuthors,
+  fetchMonthlyPopularBooks,
+  fetchMonthlyProlificAuthors,
   fetchWeeklyPopularAuthors,
   fetchWeeklyPopularBooks,
   fetchWeeklyProlificAuthors,
+  type MonthlyPopularAuthorItem,
+  type MonthlyPopularBookItem,
+  type MonthlyProlificAuthorItem,
   type WeeklyPopularAuthorItem,
   type WeeklyPopularBookItem,
   type WeeklyProlificAuthorItem,
@@ -209,6 +215,10 @@ const mapPopularBooks = (items: WeeklyPopularBookItem[]): BookRankItem[] =>
     coverImageUrl: item.coverImageUrl,
   }));
 
+const mapMonthlyProlific = (items: MonthlyProlificAuthorItem[]): AuthorRankItem[] => mapProlific(items);
+const mapMonthlyPopularAuthors = (items: MonthlyPopularAuthorItem[]): AuthorRankItem[] => mapPopularAuthors(items);
+const mapMonthlyPopularBooks = (items: MonthlyPopularBookItem[]): BookRankItem[] => mapPopularBooks(items);
+
 const RankingsPage = () => {
   const [period, setPeriod] = useState<"weekly" | "monthly">("weekly");
   const isMonthly = period === "monthly";
@@ -217,6 +227,10 @@ const RankingsPage = () => {
   const [weeklyPopularAuthors, setWeeklyPopularAuthors] = useState<AuthorRankItem[]>([]);
   const [weeklyPopularBooks, setWeeklyPopularBooks] = useState<BookRankItem[]>([]);
   const [loadingWeekly, setLoadingWeekly] = useState(false);
+  const [monthlyProlific, setMonthlyProlific] = useState<AuthorRankItem[]>([]);
+  const [monthlyPopularAuthors, setMonthlyPopularAuthors] = useState<AuthorRankItem[]>([]);
+  const [monthlyPopularBooks, setMonthlyPopularBooks] = useState<BookRankItem[]>([]);
+  const [loadingMonthly, setLoadingMonthly] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -249,6 +263,37 @@ const RankingsPage = () => {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    const now = new Date();
+
+    setLoadingMonthly(true);
+    Promise.all([
+      fetchMonthlyProlificAuthors({ year: now.getFullYear(), month: now.getMonth() + 1 }),
+      fetchMonthlyPopularAuthors({ year: now.getFullYear(), month: now.getMonth() + 1 }),
+      fetchMonthlyPopularBooks({ year: now.getFullYear(), month: now.getMonth() + 1 }),
+    ])
+      .then(([prolific, popularAuthors, popularBooks]) => {
+        if (cancelled) return;
+        setMonthlyProlific(mapMonthlyProlific(prolific));
+        setMonthlyPopularAuthors(mapMonthlyPopularAuthors(popularAuthors));
+        setMonthlyPopularBooks(mapMonthlyPopularBooks(popularBooks));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setMonthlyProlific([]);
+        setMonthlyPopularAuthors([]);
+        setMonthlyPopularBooks([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingMonthly(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const current = useMemo(() => {
     if (period === "weekly") {
       return {
@@ -258,8 +303,13 @@ const RankingsPage = () => {
         salesBooks: rankingData.weekly.salesBooks,
       };
     }
-    return rankingData.monthly;
-  }, [period, weeklyProlific, weeklyPopularAuthors, weeklyPopularBooks]);
+    return {
+      prolificAuthors: monthlyProlific.length > 0 ? monthlyProlific : rankingData.monthly.prolificAuthors,
+      likedAuthors: monthlyPopularAuthors.length > 0 ? monthlyPopularAuthors : rankingData.monthly.likedAuthors,
+      likedBooks: monthlyPopularBooks.length > 0 ? monthlyPopularBooks : rankingData.monthly.likedBooks,
+      salesBooks: rankingData.monthly.salesBooks,
+    };
+  }, [period, weeklyProlific, weeklyPopularAuthors, weeklyPopularBooks, monthlyProlific, monthlyPopularAuthors, monthlyPopularBooks]);
 
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6 bg-[radial-gradient(circle_at_top_right,rgba(63,87,187,0.16),transparent_45%),radial-gradient(circle_at_bottom_left,rgba(59,103,93,0.12),transparent_45%)]">
@@ -269,6 +319,7 @@ const RankingsPage = () => {
             <h1 className="text-4xl md:text-6xl font-headline font-extrabold tracking-tight text-on-surface">{isMonthly ? "이달의 랭킹" : "이번 주 랭킹"}</h1>
             <p className="text-on-surface-variant text-base md:text-lg max-w-2xl">{periodLabel(period)} 기준으로 가장 활발한 작가와 인기 작품 TOP 3를 모아봤어요.</p>
             {period === "weekly" && loadingWeekly && <p className="text-sm text-on-surface-variant">주간 랭킹을 불러오는 중...</p>}
+            {period === "monthly" && loadingMonthly && <p className="text-sm text-on-surface-variant">월간 랭킹을 불러오는 중...</p>}
             <div className="pt-2">
               <div className="inline-flex items-center rounded-full p-1 bg-white/75 border border-white/70 shadow-sm">
                 <button type="button" onClick={() => setPeriod("weekly")} className={`px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${!isMonthly ? "bg-primary text-on-primary" : "text-on-surface-variant hover:text-on-surface"}`}>주간</button>
