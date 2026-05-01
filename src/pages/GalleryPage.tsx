@@ -117,7 +117,6 @@ const GalleryPage = () => {
       const status = liked ? await removeBookLike(bookId) : await addBookLike(bookId);
       setBooks((prev) => prev.map((b) => (b.bookId === bookId ? { ...b, liked: status.likedByMe } : b)));
     } catch (error) {
-      console.error("좋아요 처리 실패:", error);
       setLikeErrorMessage(error instanceof Error ? error.message : "좋아요 처리에 실패했습니다.");
       if (likeErrorTimerRef.current) clearTimeout(likeErrorTimerRef.current);
       likeErrorTimerRef.current = setTimeout(() => setLikeErrorMessage(null), 2500);
@@ -246,7 +245,9 @@ const GalleryPage = () => {
 
                     <button
                       type="button"
-                      onClick={() => void toggleLike(book.bookId)}
+                      onClick={() => {
+                        void toggleLike(book.bookId);
+                      }}
                       disabled={liking}
                       className={`absolute right-2 bottom-2 z-30 w-10 h-10 rounded-full flex items-center justify-center border backdrop-blur-sm transition-all ${
                         liked
