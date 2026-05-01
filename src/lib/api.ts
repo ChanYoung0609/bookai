@@ -143,3 +143,76 @@ export async function addBookLike(bookId: string): Promise<BookLikeStatus> {
 export async function removeBookLike(bookId: string): Promise<BookLikeStatus> {
   return handleBookLikeAction(bookId, "DELETE", "Ï¢ãÏïÑÏöî Ï∑®ÏÜåÏóê Ïã§Ìå®ÌñàÏäµÎãàÎã§.");
 }
+
+export interface RankingDateParams {
+  year?: number;
+  month?: number;
+  day?: number;
+}
+
+export interface WeeklyProlificAuthorItem {
+  userId: string;
+  nickname: string;
+  profileImage: string;
+  bookCount: number;
+  rank: number;
+}
+
+export interface WeeklyPopularAuthorItem {
+  userId: string;
+  nickname: string;
+  profileImage: string;
+  totalLike: number;
+  rank: number;
+}
+
+export interface WeeklyPopularBookItem {
+  bookId: string;
+  title: string;
+  coverImageUrl: string;
+  authorNickname: string;
+  likeCount: number;
+  rank: number;
+}
+
+function buildRankingQuery(params?: RankingDateParams): string {
+  if (!params) return "";
+  const search = new URLSearchParams();
+  if (typeof params.year === "number") search.set("year", String(params.year));
+  if (typeof params.month === "number") search.set("month", String(params.month));
+  if (typeof params.day === "number") search.set("day", String(params.day));
+  const qs = search.toString();
+  return qs ? `?${qs}` : "";
+}
+
+async function fetchRankingList<T>(path: string, fallbackMessage: string): Promise<T[]> {
+  const res = await fetchWithAuth(path, { method: "GET" });
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok || !json?.success || !Array.isArray(json?.data)) {
+    throw new Error(json?.error?.message || fallbackMessage);
+  }
+
+  return json.data as T[];
+}
+
+export async function fetchWeeklyProlificAuthors(params?: RankingDateParams): Promise<WeeklyProlificAuthorItem[]> {
+  return fetchRankingList<WeeklyProlificAuthorItem>(
+    `/api/ranking/weekly/prolific-authors${buildRankingQuery(params)}`,
+    "¿Ãπ¯ ¡÷ ¥Ÿ¿€ ¿€∞° ¡∂»∏ø° Ω«∆–«ﬂΩ¿¥œ¥Ÿ."
+  );
+}
+
+export async function fetchWeeklyPopularAuthors(params?: RankingDateParams): Promise<WeeklyPopularAuthorItem[]> {
+  return fetchRankingList<WeeklyPopularAuthorItem>(
+    `/api/ranking/weekly/popular-authors${buildRankingQuery(params)}`,
+    "¿Ãπ¯ ¡÷ ¿Œ±‚ ¿€∞° ¡∂»∏ø° Ω«∆–«ﬂΩ¿¥œ¥Ÿ."
+  );
+}
+
+export async function fetchWeeklyPopularBooks(params?: RankingDateParams): Promise<WeeklyPopularBookItem[]> {
+  return fetchRankingList<WeeklyPopularBookItem>(
+    `/api/ranking/weekly/popular-books${buildRankingQuery(params)}`,
+    "¿Ãπ¯ ¡÷ ¿Œ±‚ √• ¡∂»∏ø° Ω«∆–«ﬂΩ¿¥œ¥Ÿ."
+  );
+}
