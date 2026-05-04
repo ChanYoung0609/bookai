@@ -192,17 +192,17 @@ const LibraryPage = () => {
               </div>
             )}
 
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {activeTab === "working" && (
                 <Link
                   to="/create"
-                  className="rounded-[28px] border-2 border-dashed border-[#d3daf8] bg-white/40 min-h-[320px] flex items-center justify-center text-center p-6 hover:bg-white/70 transition-colors"
+                  className="rounded-[32px] border-2 border-dashed border-[#d3daf8] bg-white/40 min-h-[380px] flex items-center justify-center text-center p-8 hover:bg-white/70 transition-colors"
                 >
                   <div className="space-y-4">
                     <div className="w-14 h-14 rounded-full bg-[#e5e9fb] text-[#5f72c8] mx-auto flex items-center justify-center">
                       <Wand2 size={22} />
                     </div>
-                    <h3 className="text-2xl font-bold text-[#1e2e66]">새로운 이야기 시작</h3>
+                    <h3 className="text-3xl font-bold text-[#1e2e66]">새로운 이야기 시작</h3>
                     <p className="text-sm text-[#6673a8]">AI와 함께 마법 같은 동화 속으로 떠나볼까요?</p>
                   </div>
                 </Link>
@@ -211,8 +211,8 @@ const LibraryPage = () => {
               {visibleBooks.map((book) => {
                 const progress = progressByStatus[book.status];
                 return (
-                  <Link key={book.bookId} to={`/book/${book.bookId}`} className="rounded-[28px] overflow-hidden bg-white shadow-sm hover:-translate-y-1 transition-transform">
-                    <div className="aspect-[4/3] bg-[#dde2f6]">
+                  <Link key={book.bookId} to={`/book/${book.bookId}`} className="rounded-[32px] overflow-hidden bg-white shadow-sm hover:-translate-y-1 transition-transform">
+                    <div className="aspect-[16/11] bg-[#dde2f6]">
                       {book.coverImageUrl ? (
                         <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                       ) : (
@@ -221,9 +221,9 @@ const LibraryPage = () => {
                         </div>
                       )}
                     </div>
-                    <div className="p-4 space-y-3">
-                      <h4 className="text-2xl font-bold text-[#1e2e66] truncate">{book.title}</h4>
-                      <p className="text-xs text-[#6673a8]">{book.authorName} · {statusLabel[book.status]}</p>
+                    <div className="p-5 space-y-3.5">
+                      <h4 className="text-[30px] leading-tight font-bold text-[#1e2e66] truncate">{book.title}</h4>
+                      <p className="text-sm text-[#6673a8]">{book.authorName} · {statusLabel[book.status]}</p>
                       <div className="space-y-1.5">
                         <div className="flex justify-between text-[11px] font-bold text-[#4d5fb7]">
                           <span>진행률</span>
