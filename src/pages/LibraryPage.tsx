@@ -192,11 +192,11 @@ const LibraryPage = () => {
               </div>
             )}
 
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {activeTab === "working" && (
                 <Link
                   to="/create"
-                  className="rounded-[32px] border-2 border-dashed border-[#d3daf8] bg-white/40 min-h-[380px] flex items-center justify-center text-center p-8 hover:bg-white/70 transition-colors"
+                  className="rounded-[32px] border-2 border-dashed border-[#d3daf8] bg-white/40 min-h-[360px] flex items-center justify-center text-center p-7 hover:bg-white/70 transition-colors"
                 >
                   <div className="space-y-4">
                     <div className="w-14 h-14 rounded-full bg-[#e5e9fb] text-[#5f72c8] mx-auto flex items-center justify-center">
@@ -212,7 +212,7 @@ const LibraryPage = () => {
                 const progress = progressByStatus[book.status];
                 return (
                   <Link key={book.bookId} to={`/book/${book.bookId}`} className="rounded-[32px] overflow-hidden bg-white shadow-sm hover:-translate-y-1 transition-transform">
-                    <div className="aspect-[16/11] bg-[#dde2f6]">
+                    <div className="aspect-[4/3] bg-[#dde2f6]">
                       {book.coverImageUrl ? (
                         <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                       ) : (
