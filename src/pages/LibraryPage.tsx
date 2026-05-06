@@ -1,7 +1,8 @@
 ﻿import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Plus, Wand2, Image as ImageIcon } from "lucide-react";
 import { fetchMyBooks, type MyBookItem } from "../lib/api";
+import { isLoggedIn } from "../lib/auth";
 
 type LibraryTab = "working" | "completed" | "liked";
 
@@ -26,6 +27,7 @@ const progressByStatus: Record<MyBookItem["status"], number> = {
 };
 
 const LibraryPage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<LibraryTab>("working");
 
   const [draftBooks, setDraftBooks] = useState<MyBookItem[]>([]);
@@ -74,8 +76,12 @@ const LibraryPage = () => {
   };
 
   useEffect(() => {
+    if (!isLoggedIn()) {
+      navigate("/login");
+      return;
+    }
     void loadInitial();
-  }, []);
+  }, [navigate]);
 
   const workingBooks = useMemo(() => [...draftBooks, ...inProgressBooks], [draftBooks, inProgressBooks]);
 
