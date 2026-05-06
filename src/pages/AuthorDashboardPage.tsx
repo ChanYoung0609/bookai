@@ -141,10 +141,7 @@ const AuthorDashboardPage = () => {
                   performanceSort === header.key ? "text-primary" : ""
                 }`}
               >
-                <span className="inline-flex items-center gap-1">
-                  {header.label}
-                  {performanceSort === header.key && <span>{sortOrder === "desc" ? "↓" : "↑"}</span>}
-                </span>
+                <span className="inline-flex items-center gap-1">{header.label}</span>
               </button>
             ))}
           </div>
