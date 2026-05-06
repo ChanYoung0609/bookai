@@ -339,7 +339,12 @@ const RankingsPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
           <BookSection title={`${periodLabel(period)} 좋아요 책`} icon={<Heart size={20} className="text-rose-500" />} items={current.likedBooks} metric="likes" />
-          <BookSection title={`${periodLabel(period)} 최고 매출 책`} icon={<Coins size={20} className="text-amber-600" />} items={current.salesBooks} metric="sales" />
+          <BookSection
+            title={`${periodLabel(period)} 베스트 셀러`}
+            icon={<Coins size={20} className="text-amber-600" />}
+            items={current.salesBooks}
+            metric="sales"
+          />
           <AuthorSection title={`${periodLabel(period)} 다작 작가`} icon={<BookOpen size={20} className="text-primary" />} items={current.prolificAuthors} />
           <AuthorSection title={`${periodLabel(period)} 좋아요 작가`} icon={<Trophy size={20} className="text-secondary" />} items={current.likedAuthors} />
         </div>
