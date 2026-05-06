@@ -33,21 +33,33 @@ const mockBookPerformance = [
 ];
 
 type PerformanceSort = "title" | "reads" | "likes" | "rating" | "revenue";
+type SortOrder = "asc" | "desc";
 
 const AuthorDashboardPage = () => {
   const navigate = useNavigate();
   const [performanceSort, setPerformanceSort] = useState<PerformanceSort>("reads");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   useEffect(() => {
     if (!isLoggedIn()) navigate("/login");
   }, [navigate]);
 
   const sortedBooks = useMemo(() => {
+    const orderFactor = sortOrder === "asc" ? 1 : -1;
     if (performanceSort === "title") {
-      return [...mockBookPerformance].sort((a, b) => a.title.localeCompare(b.title));
+      return [...mockBookPerformance].sort((a, b) => a.title.localeCompare(b.title) * orderFactor);
     }
-    return [...mockBookPerformance].sort((a, b) => b[performanceSort] - a[performanceSort]);
-  }, [performanceSort]);
+    return [...mockBookPerformance].sort((a, b) => (a[performanceSort] - b[performanceSort]) * orderFactor);
+  }, [performanceSort, sortOrder]);
+
+  const onClickSortHeader = (key: PerformanceSort) => {
+    if (performanceSort === key) {
+      setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"));
+      return;
+    }
+    setPerformanceSort(key);
+    setSortOrder(key === "title" ? "asc" : "desc");
+  };
 
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6">
@@ -113,7 +125,7 @@ const AuthorDashboardPage = () => {
             </h2>
           </div>
 
-          <div className="hidden md:grid grid-cols-12 gap-4 px-4 pb-3 text-xs font-bold text-on-surface-variant uppercase tracking-wider">
+          <div className="hidden md:grid grid-cols-12 gap-4 px-4 pb-3 text-sm md:text-base font-bold text-on-surface-variant uppercase tracking-wider">
             {([
               { key: "title", label: "작품", className: "col-span-4 text-left" },
               { key: "reads", label: "조회수", className: "col-span-2 text-right" },
@@ -124,12 +136,15 @@ const AuthorDashboardPage = () => {
               <button
                 key={header.key}
                 type="button"
-                onClick={() => setPerformanceSort(header.key)}
+                onClick={() => onClickSortHeader(header.key)}
                 className={`${header.className} hover:text-on-surface transition-colors ${
                   performanceSort === header.key ? "text-primary" : ""
                 }`}
               >
-                {header.label}
+                <span className="inline-flex items-center gap-1">
+                  {header.label}
+                  {performanceSort === header.key && <span>{sortOrder === "desc" ? "↓" : "↑"}</span>}
+                </span>
               </button>
             ))}
           </div>
