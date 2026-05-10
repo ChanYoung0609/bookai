@@ -142,6 +142,33 @@ export interface BookLikeStatus {
   likedByMe: boolean;
 }
 
+export interface ReadingProgress {
+  lastReadPageNumber: number;
+  isCompleted: boolean;
+}
+
+export interface MyReadingProgressItem {
+  bookId: string;
+  title: string;
+  coverImageUrl: string | null;
+  authorName: string | null;
+  progressPercentage: number;
+  isCompleted: boolean;
+  lastReadAt: string;
+}
+
+export interface MyReadingProgressPage {
+  first: boolean;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  items: MyReadingProgressItem[];
+  last: boolean;
+  page: number;
+  size: number;
+  totalCount: number;
+  totalPages: number;
+}
+
 export async function fetchBookLikeStatus(bookId: string): Promise<BookLikeStatus> {
   const res = await fetchWithAuth(`/api/books/${bookId}/likes`, { method: "GET" });
   const json = await res.json().catch(() => null);
@@ -174,6 +201,59 @@ export async function addBookLike(bookId: string): Promise<BookLikeStatus> {
 
 export async function removeBookLike(bookId: string): Promise<BookLikeStatus> {
   return handleBookLikeAction(bookId, "DELETE", "좋아요 취소에 실패했습니다.");
+}
+
+export async function fetchReadingProgress(bookId: string): Promise<ReadingProgress> {
+  const res = await fetchWithAuth(`/api/books/${bookId}/reading-progress`, { method: "GET" });
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json?.success || !json?.data) {
+    throw new Error(json?.error?.message || "내 진행도 조회에 실패했습니다.");
+  }
+  return json.data as ReadingProgress;
+}
+
+export async function upsertReadingProgress(bookId: string, lastReadPageNumber: number): Promise<string> {
+  const res = await fetchWithAuth(`/api/books/${bookId}/reading-progress`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ lastReadPageNumber }),
+  });
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.error?.message || "진행도 저장에 실패했습니다.");
+  }
+  return (json?.data as string) || "책 진행도 업데이트 완료";
+}
+
+export async function completeReadingProgress(bookId: string, lastReadPageNumber: number): Promise<string> {
+  const res = await fetchWithAuth(`/api/books/${bookId}/reading-progress/complete`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ lastReadPageNumber }),
+  });
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.error?.message || "완독 처리에 실패했습니다.");
+  }
+  return (json?.data as string) || "완독 처리 완료";
+}
+
+export async function fetchMyReadingProgresses(
+  page: number,
+  size: number,
+  includeCompleted = false
+): Promise<MyReadingProgressPage> {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("size", String(size));
+  params.set("includeCompleted", String(includeCompleted));
+
+  const res = await fetchWithAuth(`/api/user/me/reading-progresses?${params.toString()}`, { method: "GET" });
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json?.success || !json?.data) {
+    throw new Error(json?.error?.message || "이어보기 목록 조회에 실패했습니다.");
+  }
+  return json.data as MyReadingProgressPage;
 }
 
 export interface RankingDateParams {

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { animate, motion } from "motion/react";
 import { BookOpen, Clock, TrendingUp, Heart, ArrowLeft, CheckCircle, BookMarked, Target, X } from "lucide-react";
 import { isLoggedIn } from "../lib/auth";
+import { fetchMyReadingProgresses, type MyReadingProgressItem } from "../lib/api";
 
 // TODO: 실제 API 연동
 const mockReaderStats = {
@@ -17,19 +18,6 @@ const mockReaderStats = {
   monthlyCompleted: 7,
 };
 
-const mockReadingList = [
-  { id: "1", title: "별빛 요정의 모험", author: "하늘봄", progress: 75, lastRead: "2시간 전", lastReadMinutes: 120, totalPages: 12 },
-  { id: "2", title: "숲속 친구들", author: "초록나무", progress: 40, lastRead: "어제", lastReadMinutes: 1440, totalPages: 8 },
-  { id: "3", title: "구름 위의 집", author: "하늘봄", progress: 20, lastRead: "3일 전", lastReadMinutes: 4320, totalPages: 16 },
-  { id: "4", title: "마법의 정원", author: "봄햇살", progress: 90, lastRead: "5일 전", lastReadMinutes: 7200, totalPages: 10 },
-];
-
-const mockCompletedRecent = [
-  { id: "5", title: "바다 위의 별", author: "푸른노리", completedDate: "2일 전", rating: 5 },
-  { id: "6", title: "무지개 다리", author: "햇동이", completedDate: "1주 전", rating: 4 },
-  { id: "7", title: "별빛 기차", author: "달빛", completedDate: "2주 전", rating: 5 },
-];
-
 const ReaderDashboardPage = () => {
   const navigate = useNavigate();
   const [readingSort, setReadingSort] = useState<"high" | "low" | "recent">("recent");
@@ -38,10 +26,36 @@ const ReaderDashboardPage = () => {
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [animatedGoalPercent, setAnimatedGoalPercent] = useState(0);
   const animatedGoalPercentRef = useRef(0);
+  const [readingItems, setReadingItems] = useState<MyReadingProgressItem[]>([]);
+  const [completedItems, setCompletedItems] = useState<MyReadingProgressItem[]>([]);
 
   useEffect(() => {
     if (!isLoggedIn()) navigate("/login");
   }, [navigate]);
+
+  useEffect(() => {
+    if (!isLoggedIn()) return;
+    let cancelled = false;
+
+    Promise.all([
+      fetchMyReadingProgresses(0, 20, false),
+      fetchMyReadingProgresses(0, 20, true),
+    ])
+      .then(([reading, all]) => {
+        if (cancelled) return;
+        setReadingItems(reading.items ?? []);
+        setCompletedItems((all.items ?? []).filter((item) => item.isCompleted).slice(0, 3));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setReadingItems([]);
+        setCompletedItems([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const goalPercent = Math.min(100, Math.round((mockReaderStats.monthlyCompleted / monthlyGoal) * 100));
 
@@ -61,18 +75,18 @@ const ReaderDashboardPage = () => {
   }, [goalPercent]);
 
   const sortedReadingList = useMemo(() => {
-    const list = [...mockReadingList];
+    const list = [...readingItems];
 
     if (readingSort === "high") {
-      return list.sort((a, b) => b.progress - a.progress);
+      return list.sort((a, b) => b.progressPercentage - a.progressPercentage);
     }
 
     if (readingSort === "low") {
-      return list.sort((a, b) => a.progress - b.progress);
+      return list.sort((a, b) => a.progressPercentage - b.progressPercentage);
     }
 
-    return list.sort((a, b) => a.lastReadMinutes - b.lastReadMinutes);
-  }, [readingSort]);
+    return list;
+  }, [readingSort, readingItems]);
 
   const openGoalModal = () => {
     setGoalDraft(String(monthlyGoal));
@@ -177,8 +191,8 @@ const ReaderDashboardPage = () => {
             <div className="space-y-4">
               {sortedReadingList.map((book) => (
                 <Link
-                  key={book.id}
-                  to={`/read/${book.id}`}
+                  key={book.bookId}
+                  to={`/read/${book.bookId}`}
                   className="flex items-center gap-4 p-4 rounded-2xl bg-surface-container-low hover:bg-surface-container transition-colors group"
                 >
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -186,13 +200,13 @@ const ReaderDashboardPage = () => {
                   </div>
                   <div className="flex-grow min-w-0">
                     <p className="font-bold text-on-surface truncate group-hover:text-primary transition-colors">{book.title}</p>
-                    <p className="text-xs text-on-surface-variant">{book.author} 작가 · {book.lastRead}</p>
+                    <p className="text-xs text-on-surface-variant">{book.authorName ?? "알 수 없는 작가"} · {book.lastReadAt}</p>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <div className="w-24 h-2.5 bg-surface-container rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${book.progress}%` }} />
+                      <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${book.progressPercentage}%` }} />
                     </div>
-                    <span className="text-sm font-bold text-primary w-12 text-right">{book.progress}%</span>
+                    <span className="text-sm font-bold text-primary w-12 text-right">{book.progressPercentage}%</span>
                   </div>
                 </Link>
               ))}
@@ -255,15 +269,15 @@ const ReaderDashboardPage = () => {
                 최근 완독
               </h3>
               <div className="space-y-3">
-                {mockCompletedRecent.map((book) => (
-                  <div key={book.id} className="flex items-center gap-3">
+                {completedItems.map((book) => (
+                  <div key={book.bookId} className="flex items-center gap-3">
                     <CheckCircle size={16} className="text-secondary flex-shrink-0" />
                     <div className="min-w-0 flex-grow">
                       <p className="text-sm font-bold text-on-surface truncate">{book.title}</p>
-                      <p className="text-xs text-on-surface-variant">{book.completedDate}</p>
+                      <p className="text-xs text-on-surface-variant">{book.lastReadAt}</p>
                     </div>
                     <div className="flex gap-0.5 flex-shrink-0">
-                      {Array.from({ length: book.rating }).map((_, i) => (
+                      {Array.from({ length: 5 }).map((_, i) => (
                         <span key={i} className="text-yellow-500 text-xs">
                           ★
                         </span>

@@ -2,7 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronLeft, ChevronRight, Settings, Info, Sparkles } from "lucide-react";
-import { fetchBookDetail, type BookDetail } from "../lib/api";
+import {
+  completeReadingProgress,
+  fetchBookDetail,
+  fetchReadingProgress,
+  upsertReadingProgress,
+  type BookDetail,
+} from "../lib/api";
 
 const ReadingPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -10,6 +16,7 @@ const ReadingPage = () => {
   const [book, setBook] = useState<BookDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [initializedProgress, setInitializedProgress] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -19,6 +26,43 @@ const ReadingPage = () => {
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!id || !book || book.pages.length === 0) return;
+    let cancelled = false;
+
+    fetchReadingProgress(id)
+      .then((progress) => {
+        if (cancelled) return;
+        const pageIndex = Math.max(0, Math.min(book.pages.length - 1, progress.lastReadPageNumber - 1));
+        setCurrentPage(pageIndex);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setInitializedProgress(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, book]);
+
+  useEffect(() => {
+    if (!id || !book || book.pages.length === 0 || !initializedProgress) return;
+
+    const pageNumber = currentPage + 1;
+    const isLastPage = currentPage === book.pages.length - 1;
+
+    const timer = window.setTimeout(() => {
+      if (isLastPage) {
+        void completeReadingProgress(id, pageNumber).catch(() => {});
+      } else {
+        void upsertReadingProgress(id, pageNumber).catch(() => {});
+      }
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [id, book, currentPage, initializedProgress]);
 
   if (loading) {
     return (
