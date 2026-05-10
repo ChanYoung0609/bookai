@@ -18,6 +18,19 @@ export interface PageResponse<T> {
   size: number;
 }
 
+export type MyBookStatus = "DRAFT" | "IN_PROGRESS" | "COMPLETED";
+export type MyBookVisibility = "PRIVATE" | "PUBLIC";
+
+export interface MyBookItem {
+  bookId: string;
+  title: string;
+  authorName: string;
+  coverImageUrl: string;
+  status: MyBookStatus;
+  visibility: MyBookVisibility;
+  createdAt: string;
+}
+
 export async function fetchBooks(page: number, size: number): Promise<PageResponse<BookItem>> {
   const res = await fetchWithAuth(`/api/books?page=${page}&size=${size}`, {
     method: "GET",
@@ -29,6 +42,28 @@ export async function fetchBooks(page: number, size: number): Promise<PageRespon
   }
 
   return json.data as PageResponse<BookItem>;
+}
+
+export async function fetchMyBooks(
+  page: number,
+  size: number,
+  status?: MyBookStatus
+): Promise<PageResponse<MyBookItem>> {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("size", String(size));
+  if (status) params.set("status", status);
+
+  const res = await fetchWithAuth(`/api/books/me?${params.toString()}`, {
+    method: "GET",
+  });
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok || !json?.success || !json?.data) {
+    throw new Error(json?.error?.message || "내 책 목록 조회에 실패했습니다.");
+  }
+
+  return json.data as PageResponse<MyBookItem>;
 }
 
 export interface BookDetailPage {
