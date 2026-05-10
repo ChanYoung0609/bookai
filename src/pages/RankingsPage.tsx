@@ -1,14 +1,30 @@
-﻿import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, Coins, Heart, Trophy } from "lucide-react";
 import { motion } from "motion/react";
+import {
+  fetchMonthlyPopularAuthors,
+  fetchMonthlyPopularBooks,
+  fetchMonthlyProlificAuthors,
+  fetchWeeklyPopularAuthors,
+  fetchWeeklyPopularBooks,
+  fetchWeeklyProlificAuthors,
+  type MonthlyPopularAuthorItem,
+  type MonthlyPopularBookItem,
+  type MonthlyProlificAuthorItem,
+  type WeeklyPopularAuthorItem,
+  type WeeklyPopularBookItem,
+  type WeeklyProlificAuthorItem,
+} from "../lib/api";
+
+type RankingPeriod = "weekly" | "monthly";
 
 type AuthorRankItem = {
   id: string;
   name: string;
   books: number;
   likes: number;
-  growth: string;
+  profileImage?: string;
 };
 
 type BookRankItem = {
@@ -17,150 +33,82 @@ type BookRankItem = {
   author: string;
   likes: number;
   sales: number;
-  coverImageUrl: string;
+  coverImageUrl?: string | null;
 };
 
-const rankBadge = ["🥇", "🥈", "🥉"];
+type RankingViewData = {
+  prolificAuthors: AuthorRankItem[];
+  likedAuthors: AuthorRankItem[];
+  likedBooks: BookRankItem[];
+  salesBooks: BookRankItem[];
+};
+
+const rankBadge = ["1위", "2위", "3위"];
 const podiumOrder = [1, 0, 2] as const;
+const fallbackProfileImage = "https://ssl.pstatic.net/static/pwe/address/img_profile.png";
+const fallbackCoverImage = "https://picsum.photos/seed/ranking-book-fallback/600/800";
 
-const rankingData: Record<
-  "weekly" | "monthly",
-  {
-    prolificAuthors: AuthorRankItem[];
-    likedAuthors: AuthorRankItem[];
-    likedBooks: BookRankItem[];
-    salesBooks: BookRankItem[];
-  }
-> = {
-  monthly: {
-    prolificAuthors: [
-      { id: "ma-p-1", name: "하늘봄", books: 14, likes: 1840, growth: "+18%" },
-      { id: "ma-p-2", name: "초록나무", books: 11, likes: 1560, growth: "+12%" },
-      { id: "ma-p-3", name: "달빛", books: 9, likes: 1422, growth: "+9%" },
-    ],
-    likedAuthors: [
-      { id: "ma-l-1", name: "하늘봄", books: 14, likes: 1840, growth: "+18%" },
-      { id: "ma-l-2", name: "별비", books: 8, likes: 1710, growth: "+15%" },
-      { id: "ma-l-3", name: "초록나무", books: 11, likes: 1560, growth: "+12%" },
-    ],
-    likedBooks: [
-      {
-        id: "mb-l-1",
-        title: "별빛 요정의 모험",
-        author: "하늘봄",
-        likes: 512,
-        sales: 128000,
-        coverImageUrl: "https://picsum.photos/seed/month-like-book-1/600/800",
-      },
-      {
-        id: "mb-l-2",
-        title: "숲속 친구들",
-        author: "초록나무",
-        likes: 436,
-        sales: 98000,
-        coverImageUrl: "https://picsum.photos/seed/month-like-book-2/600/800",
-      },
-      {
-        id: "mb-l-3",
-        title: "바다 위의 별",
-        author: "달빛",
-        likes: 391,
-        sales: 82000,
-        coverImageUrl: "https://picsum.photos/seed/month-like-book-3/600/800",
-      },
-    ],
-    salesBooks: [
-      {
-        id: "mb-s-1",
-        title: "별빛 요정의 모험",
-        author: "하늘봄",
-        likes: 512,
-        sales: 128000,
-        coverImageUrl: "https://picsum.photos/seed/month-sales-book-1/600/800",
-      },
-      {
-        id: "mb-s-2",
-        title: "숲속 친구들",
-        author: "초록나무",
-        likes: 436,
-        sales: 98000,
-        coverImageUrl: "https://picsum.photos/seed/month-sales-book-2/600/800",
-      },
-      {
-        id: "mb-s-3",
-        title: "무지개 다리",
-        author: "별비",
-        likes: 374,
-        sales: 90500,
-        coverImageUrl: "https://picsum.photos/seed/month-sales-book-3/600/800",
-      },
-    ],
-  },
-  weekly: {
-    prolificAuthors: [
-      { id: "wa-p-1", name: "민들레", books: 7, likes: 426, growth: "+16%" },
-      { id: "wa-p-2", name: "별모래", books: 6, likes: 391, growth: "+13%" },
-      { id: "wa-p-3", name: "은하수", books: 5, likes: 358, growth: "+10%" },
-    ],
-    likedAuthors: [
-      { id: "wa-l-1", name: "민들레", books: 7, likes: 426, growth: "+16%" },
-      { id: "wa-l-2", name: "호두나무", books: 4, likes: 403, growth: "+14%" },
-      { id: "wa-l-3", name: "별모래", books: 6, likes: 391, growth: "+13%" },
-    ],
-    likedBooks: [
-      {
-        id: "wb-l-1",
-        title: "구름 위 우체국",
-        author: "민들레",
-        likes: 178,
-        sales: 42000,
-        coverImageUrl: "https://picsum.photos/seed/week-like-book-1/600/800",
-      },
-      {
-        id: "wb-l-2",
-        title: "달콤한 별나라 여행",
-        author: "별모래",
-        likes: 161,
-        sales: 36800,
-        coverImageUrl: "https://picsum.photos/seed/week-like-book-2/600/800",
-      },
-      {
-        id: "wb-l-3",
-        title: "반짝이는 숲의 약속",
-        author: "은하수",
-        likes: 149,
-        sales: 33100,
-        coverImageUrl: "https://picsum.photos/seed/week-like-book-3/600/800",
-      },
-    ],
-    salesBooks: [
-      {
-        id: "wb-s-1",
-        title: "구름 위 우체국",
-        author: "민들레",
-        likes: 178,
-        sales: 42000,
-        coverImageUrl: "https://picsum.photos/seed/week-sales-book-1/600/800",
-      },
-      {
-        id: "wb-s-2",
-        title: "달콤한 별나라 여행",
-        author: "별모래",
-        likes: 161,
-        sales: 36800,
-        coverImageUrl: "https://picsum.photos/seed/week-sales-book-2/600/800",
-      },
-      {
-        id: "wb-s-3",
-        title: "바람꽃 도서관",
-        author: "호두나무",
-        likes: 137,
-        sales: 31500,
-        coverImageUrl: "https://picsum.photos/seed/week-sales-book-3/600/800",
-      },
-    ],
-  },
+const temporarySalesBooks: Record<RankingPeriod, BookRankItem[]> = {
+  weekly: [
+    {
+      id: "weekly-sales-1",
+      title: "구름 위의 우체국",
+      author: "민들레",
+      likes: 178,
+      sales: 42000,
+      coverImageUrl: "https://picsum.photos/seed/week-sales-book-1/600/800",
+    },
+    {
+      id: "weekly-sales-2",
+      title: "수요일 별나라 여행",
+      author: "별모아",
+      likes: 161,
+      sales: 36800,
+      coverImageUrl: "https://picsum.photos/seed/week-sales-book-2/600/800",
+    },
+    {
+      id: "weekly-sales-3",
+      title: "바람꽃 도서관",
+      author: "몽두나무",
+      likes: 137,
+      sales: 31500,
+      coverImageUrl: "https://picsum.photos/seed/week-sales-book-3/600/800",
+    },
+  ],
+  monthly: [
+    {
+      id: "monthly-sales-1",
+      title: "별빛 요정의 모험",
+      author: "하늘봄",
+      likes: 512,
+      sales: 128000,
+      coverImageUrl: "https://picsum.photos/seed/month-sales-book-1/600/800",
+    },
+    {
+      id: "monthly-sales-2",
+      title: "숲속 친구들",
+      author: "초록나무",
+      likes: 436,
+      sales: 98000,
+      coverImageUrl: "https://picsum.photos/seed/month-sales-book-2/600/800",
+    },
+    {
+      id: "monthly-sales-3",
+      title: "무지개 다리",
+      author: "별비",
+      likes: 374,
+      sales: 90500,
+      coverImageUrl: "https://picsum.photos/seed/month-sales-book-3/600/800",
+    },
+  ],
 };
+
+const emptyRankingData = (period: RankingPeriod): RankingViewData => ({
+  prolificAuthors: [],
+  likedAuthors: [],
+  likedBooks: [],
+  salesBooks: temporarySalesBooks[period],
+});
 
 const podiumHeightClass: Record<1 | 2 | 3, string> = {
   1: "h-24 md:h-28",
@@ -174,15 +122,53 @@ const podiumToneClass: Record<1 | 2 | 3, string> = {
   3: "from-orange-300 to-orange-500 text-orange-950",
 };
 
-const periodLabel = (period: "weekly" | "monthly") => (period === "monthly" ? "이달의" : "이번 주");
+const periodLabel = (period: RankingPeriod) => (period === "monthly" ? "이달의" : "이번 주");
+
+const getCurrentDateParams = () => {
+  const now = new Date();
+  return {
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+    day: now.getDate(),
+  };
+};
+
+const mapProlificAuthors = (items: Array<WeeklyProlificAuthorItem | MonthlyProlificAuthorItem>): AuthorRankItem[] =>
+  items.slice(0, 3).map((item) => ({
+    id: item.userId,
+    name: item.nickname,
+    books: item.bookCount,
+    likes: 0,
+    profileImage: item.profileImage,
+  }));
+
+const mapPopularAuthors = (items: Array<WeeklyPopularAuthorItem | MonthlyPopularAuthorItem>): AuthorRankItem[] =>
+  items.slice(0, 3).map((item) => ({
+    id: item.userId,
+    name: item.nickname,
+    books: 0,
+    likes: item.totalLike,
+    profileImage: item.profileImage,
+  }));
+
+const mapPopularBooks = (items: Array<WeeklyPopularBookItem | MonthlyPopularBookItem>): BookRankItem[] =>
+  items.slice(0, 3).map((item) => ({
+    id: item.bookId,
+    title: item.title,
+    author: item.authorNickname,
+    likes: item.likeCount,
+    sales: 0,
+    coverImageUrl: item.coverImageUrl,
+  }));
 
 type AuthorSectionProps = {
   title: string;
   icon: React.ReactNode;
   items: AuthorRankItem[];
+  metric: "books" | "likes";
 };
 
-const AuthorSection = ({ title, icon, items }: AuthorSectionProps) => {
+const AuthorSection = ({ title, icon, items, metric }: AuthorSectionProps) => {
   return (
     <motion.section
       initial={{ opacity: 0, y: 18 }}
@@ -194,7 +180,7 @@ const AuthorSection = ({ title, icon, items }: AuthorSectionProps) => {
         {title}
       </h2>
 
-      <div className="flex items-end gap-3 mb-5">
+      <div className="flex items-end gap-3 mb-5 min-h-[184px]">
         {podiumOrder.map((index) => {
           const item = items[index];
           if (!item) return <div key={`author-podium-empty-${index}`} className="flex-1" />;
@@ -205,15 +191,20 @@ const AuthorSection = ({ title, icon, items }: AuthorSectionProps) => {
               <div className="mb-2 px-2 py-1 rounded-xl bg-surface-container border border-outline-variant/20 text-center">
                 <p className="text-xs font-bold text-on-surface truncate">{item.name}</p>
               </div>
-              <div className="mb-2 flex justify-center">
+              <motion.div
+                className="mb-2 flex justify-center"
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, ease: "easeOut", delay: rank * 0.08 + 0.2 }}
+              >
                 <img
-                  src={`https://picsum.photos/seed/author-${item.id}/96/96`}
+                  src={item.profileImage || fallbackProfileImage}
                   alt={`${item.name} 프로필`}
-                  className="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border-2 border-white shadow-sm"
+                  className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-2 border-white shadow-sm"
                   loading="lazy"
                   decoding="async"
                 />
-              </div>
+              </motion.div>
               <motion.div
                 className={`rounded-t-2xl bg-gradient-to-b ${podiumToneClass[rank]} ${podiumHeightClass[rank]} flex items-center justify-center shadow-inner`}
                 initial={{ scaleY: 0 }}
@@ -229,14 +220,24 @@ const AuthorSection = ({ title, icon, items }: AuthorSectionProps) => {
       </div>
 
       <div className="space-y-2">
+        {items.length === 0 && <p className="rounded-xl bg-surface-container-low p-4 text-sm text-on-surface-variant">아직 랭킹 데이터가 없어요.</p>}
         {items.map((item, i) => (
-          <div key={item.id} className="rounded-xl bg-surface-container-low border border-outline-variant/15 p-3">
-            <p className="font-semibold text-on-surface truncate">
-              {rankBadge[i]} {item.name}
-            </p>
-            <p className="text-xs text-on-surface-variant mt-1">
-              작품 {item.books}작
-            </p>
+          <div key={item.id} className="rounded-xl bg-surface-container-low border border-outline-variant/15 p-3 flex items-center gap-3">
+            <img
+              src={item.profileImage || fallbackProfileImage}
+              alt={`${item.name} 프로필`}
+              className="w-11 h-11 rounded-full object-cover shrink-0"
+              loading="lazy"
+              decoding="async"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-on-surface truncate">
+                {rankBadge[i]} {item.name}
+              </p>
+              <p className="text-xs text-on-surface-variant mt-1">
+                {metric === "books" ? `작품 ${item.books.toLocaleString()}권` : `좋아요 ${item.likes.toLocaleString()}개`}
+              </p>
+            </div>
           </div>
         ))}
       </div>
@@ -263,7 +264,7 @@ const BookSection = ({ title, icon, items, metric }: BookSectionProps) => {
         {title}
       </h2>
 
-      <div className="flex items-end gap-3 mb-5">
+      <div className="flex items-end gap-3 mb-5 min-h-[204px]">
         {podiumOrder.map((index) => {
           const item = items[index];
           if (!item) return <div key={`book-podium-empty-${index}`} className="flex-1" />;
@@ -274,15 +275,20 @@ const BookSection = ({ title, icon, items, metric }: BookSectionProps) => {
               <div className="mb-2 px-2 py-1 rounded-xl bg-surface-container border border-outline-variant/20 text-center">
                 <p className="text-xs font-bold text-on-surface truncate">{item.title}</p>
               </div>
-              <div className="mb-2 flex justify-center">
+              <motion.div
+                className="mb-2 flex justify-center"
+                initial={{ opacity: 0, y: 22 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, ease: "easeOut", delay: rank * 0.08 + 0.2 }}
+              >
                 <img
-                  src={item.coverImageUrl}
+                  src={item.coverImageUrl || fallbackCoverImage}
                   alt={`${item.title} 표지`}
-                  className="w-[52px] h-[68px] md:w-[60px] md:h-[84px] rounded-lg object-cover border-2 border-white shadow-sm"
+                  className="w-[64px] h-[84px] md:w-[74px] md:h-[102px] rounded-xl object-cover border-2 border-white shadow-sm"
                   loading="lazy"
                   decoding="async"
                 />
-              </div>
+              </motion.div>
               <motion.div
                 className={`rounded-t-2xl bg-gradient-to-b ${podiumToneClass[rank]} ${podiumHeightClass[rank]} flex items-center justify-center shadow-inner`}
                 initial={{ scaleY: 0 }}
@@ -298,6 +304,7 @@ const BookSection = ({ title, icon, items, metric }: BookSectionProps) => {
       </div>
 
       <div className="space-y-2">
+        {items.length === 0 && <p className="rounded-xl bg-surface-container-low p-4 text-sm text-on-surface-variant">아직 랭킹 데이터가 없어요.</p>}
         {items.map((item, i) => (
           <Link
             key={item.id}
@@ -305,9 +312,9 @@ const BookSection = ({ title, icon, items, metric }: BookSectionProps) => {
             className="group rounded-xl bg-surface-container-low border border-outline-variant/15 p-3 flex items-center gap-3 hover:bg-surface-container transition-colors"
           >
             <img
-              src={item.coverImageUrl}
+              src={item.coverImageUrl || fallbackCoverImage}
               alt={item.title}
-              className="w-10 h-14 rounded-md object-cover shrink-0"
+              className="w-12 h-16 rounded-lg object-cover shrink-0"
               loading="lazy"
               decoding="async"
             />
@@ -317,9 +324,7 @@ const BookSection = ({ title, icon, items, metric }: BookSectionProps) => {
               </p>
               <p className="text-xs text-on-surface-variant">{item.author} 작가</p>
               <p className="text-xs text-on-surface-variant mt-0.5">
-                {metric === "likes"
-                  ? `좋아요 ${item.likes.toLocaleString()}`
-                  : `매출 ${item.sales.toLocaleString()}원`}
+                {metric === "likes" ? `좋아요 ${item.likes.toLocaleString()}개` : `매출 ${item.sales.toLocaleString()}원`}
               </p>
             </div>
           </Link>
@@ -330,9 +335,59 @@ const BookSection = ({ title, icon, items, metric }: BookSectionProps) => {
 };
 
 const RankingsPage = () => {
-  const [period, setPeriod] = useState<"weekly" | "monthly">("monthly");
+  const [period, setPeriod] = useState<RankingPeriod>("monthly");
+  const [rankingMap, setRankingMap] = useState<Record<RankingPeriod, RankingViewData>>({
+    weekly: emptyRankingData("weekly"),
+    monthly: emptyRankingData("monthly"),
+  });
+  const [rankingError, setRankingError] = useState<string | null>(null);
   const isMonthly = period === "monthly";
-  const current = useMemo(() => rankingData[period], [period]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const { year, month, day } = getCurrentDateParams();
+
+    const loadRankings = async () => {
+      try {
+        const [weeklyProlific, weeklyPopularAuthors, weeklyPopularBooks, monthlyProlific, monthlyPopularAuthors, monthlyPopularBooks] =
+          await Promise.all([
+            fetchWeeklyProlificAuthors({ year, month, day }),
+            fetchWeeklyPopularAuthors({ year, month, day }),
+            fetchWeeklyPopularBooks({ year, month, day }),
+            fetchMonthlyProlificAuthors({ year, month }),
+            fetchMonthlyPopularAuthors({ year, month }),
+            fetchMonthlyPopularBooks({ year, month }),
+          ]);
+
+        if (cancelled) return;
+        setRankingMap({
+          weekly: {
+            prolificAuthors: mapProlificAuthors(weeklyProlific),
+            likedAuthors: mapPopularAuthors(weeklyPopularAuthors),
+            likedBooks: mapPopularBooks(weeklyPopularBooks),
+            salesBooks: temporarySalesBooks.weekly,
+          },
+          monthly: {
+            prolificAuthors: mapProlificAuthors(monthlyProlific),
+            likedAuthors: mapPopularAuthors(monthlyPopularAuthors),
+            likedBooks: mapPopularBooks(monthlyPopularBooks),
+            salesBooks: temporarySalesBooks.monthly,
+          },
+        });
+        setRankingError(null);
+      } catch (error) {
+        if (cancelled) return;
+        setRankingError(error instanceof Error ? error.message : "랭킹 정보를 불러오지 못했습니다.");
+      }
+    };
+
+    loadRankings();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const current = useMemo(() => rankingMap[period], [period, rankingMap]);
 
   return (
     <div className="min-h-screen pt-24 md:pt-32 pb-20 px-4 md:px-6 bg-[radial-gradient(circle_at_top_right,rgba(63,87,187,0.16),transparent_45%),radial-gradient(circle_at_bottom_left,rgba(59,103,93,0.12),transparent_45%)]">
@@ -348,8 +403,9 @@ const RankingsPage = () => {
           <div className="relative space-y-3">
             <h1 className="text-4xl md:text-6xl font-headline font-extrabold tracking-tight text-on-surface">랭킹</h1>
             <p className="text-on-surface-variant text-base md:text-lg max-w-2xl">
-              {periodLabel(period)} 기준으로 가장 활발한 작가와 인기 작품 TOP 3를 모아봤어요.
+              {periodLabel(period)} 기준으로 가장 주목받는 작가와 인기 작품 TOP 3를 모아봤어요.
             </p>
+            {rankingError && <p className="text-sm font-semibold text-red-600">{rankingError}</p>}
             <div className="pt-2">
               <div className="inline-flex items-center rounded-full p-1 bg-white/75 border border-white/70 shadow-sm">
                 <button
@@ -375,17 +431,7 @@ const RankingsPage = () => {
           </div>
         </motion.section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
-          <AuthorSection
-            title={`${periodLabel(period)} 다작 작가`}
-            icon={<BookOpen size={20} className="text-primary" />}
-            items={current.prolificAuthors}
-          />
-          <AuthorSection
-            title={`${periodLabel(period)} 좋아요 작가`}
-            icon={<Trophy size={20} className="text-secondary" />}
-            items={current.likedAuthors}
-          />
+        <motion.div key={period} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
           <BookSection
             title={`${periodLabel(period)} 좋아요 책`}
             icon={<Heart size={20} className="text-rose-500" />}
@@ -393,12 +439,24 @@ const RankingsPage = () => {
             metric="likes"
           />
           <BookSection
-            title={period === "weekly" ? "이번주 베스트 셀러" : "이달의 베스트 셀러"}
+            title={`${periodLabel(period)} 베스트셀러`}
             icon={<Coins size={20} className="text-amber-600" />}
             items={current.salesBooks}
             metric="sales"
           />
-        </div>
+          <AuthorSection
+            title={`${periodLabel(period)} 다작 작가`}
+            icon={<BookOpen size={20} className="text-primary" />}
+            items={current.prolificAuthors}
+            metric="books"
+          />
+          <AuthorSection
+            title={`${periodLabel(period)} 좋아요 작가`}
+            icon={<Trophy size={20} className="text-secondary" />}
+            items={current.likedAuthors}
+            metric="likes"
+          />
+        </motion.div>
       </div>
     </div>
   );
