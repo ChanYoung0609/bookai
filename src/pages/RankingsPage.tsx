@@ -317,7 +317,9 @@ const BookSection = ({ title, icon, items, metric }: BookSectionProps) => {
               </p>
               <p className="text-xs text-on-surface-variant">{item.author} 작가</p>
               <p className="text-xs text-on-surface-variant mt-0.5">
-                if(metric === "likes")  `좋아요 ${item.likes.toLocaleString()}`
+                {metric === "likes"
+                  ? `좋아요 ${item.likes.toLocaleString()}`
+                  : `매출 ${item.sales.toLocaleString()}원`}
               </p>
             </div>
           </Link>
@@ -391,7 +393,7 @@ const RankingsPage = () => {
             metric="likes"
           />
           <BookSection
-            title="베스트셀러"
+            title={period === "weekly" ? "이번주 베스트 셀러" : "이번달 베스트 셀러"}
             icon={<Coins size={20} className="text-amber-600" />}
             items={current.salesBooks}
             metric="sales"
