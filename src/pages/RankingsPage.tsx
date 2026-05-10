@@ -393,7 +393,7 @@ const RankingsPage = () => {
             metric="likes"
           />
           <BookSection
-            title={period === "weekly" ? "이번주 베스트 셀러" : "이번달 베스트 셀러"}
+            title={period === "weekly" ? "이번주 베스트 셀러" : "이달의 베스트 셀러"}
             icon={<Coins size={20} className="text-amber-600" />}
             items={current.salesBooks}
             metric="sales"
