@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, Coins, Heart, Trophy } from "lucide-react";
 import { motion } from "motion/react";
@@ -43,7 +43,7 @@ type RankingViewData = {
   salesBooks: BookRankItem[];
 };
 
-const rankBadge = ["1위", "2위", "3위"];
+const rankBadge = ["🥇", "🥈", "🥉"];
 const podiumOrder = [1, 0, 2] as const;
 const fallbackProfileImage = "https://ssl.pstatic.net/static/pwe/address/img_profile.png";
 const fallbackCoverImage = "https://picsum.photos/seed/ranking-book-fallback/600/800";
