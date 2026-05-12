@@ -18,6 +18,26 @@ export interface PageResponse<T> {
   size: number;
 }
 
+export interface CursorPageResponse<T> {
+  items: T[];
+  page: number;
+  size: number;
+  totalCount: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  first: boolean;
+  last: boolean;
+}
+
+export interface BannerItem {
+  bannerId: string;
+  title: string;
+  imageUrl: string;
+  linkUrl?: string | null;
+  displayOrder: number;
+}
+
 export type MyBookStatus = "DRAFT" | "IN_PROGRESS" | "COMPLETED";
 export type MyBookVisibility = "PRIVATE" | "PUBLIC";
 
@@ -42,6 +62,24 @@ export async function fetchBooks(page: number, size: number): Promise<PageRespon
   }
 
   return json.data as PageResponse<BookItem>;
+}
+
+export async function fetchBanners(page = 0, size = 10): Promise<CursorPageResponse<BannerItem>> {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("size", String(size));
+  params.set("sort", "displayOrder,asc");
+
+  const res = await fetchWithAuth(`/api/banners?${params.toString()}`, {
+    method: "GET",
+  });
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok || !json?.success || !json?.data) {
+    throw new Error(json?.error?.message || "배너 목록 조회에 실패했습니다.");
+  }
+
+  return json.data as CursorPageResponse<BannerItem>;
 }
 
 export async function fetchMyBooks(

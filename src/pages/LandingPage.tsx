@@ -2,7 +2,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { Sparkles, Flame, Clock3, ChevronLeft, ChevronRight } from "lucide-react";
-import { fetchBooks, type BookItem } from "../lib/api";
+import { fetchBanners, fetchBooks, type BannerItem, type BookItem } from "../lib/api";
 import { isLoggedIn, fetchUserMe, removeAccessToken, clearUserCache } from "../lib/auth";
 
 const HERO_ILLUSTRATION = {
@@ -20,6 +20,14 @@ const FEATURE_BANNERS = [
   "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/8bccf1b4-f7f6-4ffe-8f83-5273c70da76d.png",
   "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/8bccf1b4-f7f6-4ffe-8f83-5273c70da76d.png",
 ] as const;
+
+const FALLBACK_BANNERS: BannerItem[] = FEATURE_BANNERS.map((imageUrl, index) => ({
+  bannerId: `fallback-banner-${index}`,
+  title: "동화 제작 배너",
+  imageUrl,
+  linkUrl: null,
+  displayOrder: index + 1,
+}));
 
 const CATEGORIES = [
   { id: "all", label: "전체" },
@@ -170,6 +178,7 @@ const SliderSection = ({ title, icon, books, accentClass, showRank = false, more
 
 const LandingPage = () => {
   const [books, setBooks] = useState<BookItem[]>([]);
+  const [banners, setBanners] = useState<BannerItem[]>(FALLBACK_BANNERS);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [bannerIndex, setBannerIndex] = useState(0);
   const navigate = useNavigate();
@@ -180,19 +189,31 @@ const LandingPage = () => {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    fetchBanners(0, 10)
+      .then((data) => {
+        if (data.items.length > 0) {
+          setBanners(data.items);
+          setBannerIndex(0);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const bestBooks = useMemo(() => [...books].reverse().slice(0, 10), [books]);
   const latestBooks = useMemo(() => books.slice(0, 10), [books]);
-  const currentBanner = FEATURE_BANNERS[bannerIndex];
+  const currentBanner = banners[bannerIndex] ?? FALLBACK_BANNERS[0];
   const goToPrevBanner = () =>
-    setBannerIndex((prev) => (prev - 1 + FEATURE_BANNERS.length) % FEATURE_BANNERS.length);
-  const goToNextBanner = () => setBannerIndex((prev) => (prev + 1) % FEATURE_BANNERS.length);
+    setBannerIndex((prev) => (prev - 1 + banners.length) % banners.length);
+  const goToNextBanner = () => setBannerIndex((prev) => (prev + 1) % banners.length);
 
   useEffect(() => {
+    if (banners.length <= 1) return;
     const timer = window.setInterval(() => {
-      setBannerIndex((prev) => (prev + 1) % FEATURE_BANNERS.length);
+      setBannerIndex((prev) => (prev + 1) % banners.length);
     }, 3000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [banners.length]);
 
   const handleStartClick = async () => {
     if (isLoggedIn()) {
@@ -323,15 +344,23 @@ const LandingPage = () => {
 
             <div className="w-full md:w-[380px] lg:w-[480px] self-start space-y-3">
               <div className="relative aspect-[16/9] rounded-2xl overflow-hidden border border-white/20 glass-card shadow-sm">
-              <img
-                src={currentBanner}
-                alt="동화 제작 배너"
-                className="w-full h-full object-cover"
-                loading="lazy"
-                fetchPriority="low"
-                decoding="async"
-                referrerPolicy="no-referrer"
-              />
+                <a
+                  href={currentBanner.linkUrl || undefined}
+                  onClick={(e) => {
+                    if (!currentBanner.linkUrl) e.preventDefault();
+                  }}
+                  className="block w-full h-full"
+                >
+                  <img
+                    src={currentBanner.imageUrl}
+                    alt={currentBanner.title || "동화 제작 배너"}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    fetchPriority="low"
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                  />
+                </a>
                 <button
                   type="button"
                   onClick={goToPrevBanner}
@@ -350,9 +379,9 @@ const LandingPage = () => {
                 </button>
               </div>
               <div className="flex items-center justify-center gap-2">
-                {FEATURE_BANNERS.map((_, idx) => (
+                {banners.map((banner, idx) => (
                   <button
-                    key={idx}
+                    key={banner.bannerId}
                     type="button"
                     onClick={() => setBannerIndex(idx)}
                     aria-label={`${idx + 1}번 배너로 이동`}
