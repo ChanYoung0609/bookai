@@ -136,6 +136,91 @@ export async function reportBook(bookId: string, payload: ReportBookRequest): Pr
   return json?.data || "신고가 등록되었습니다.";
 }
 
+export interface BookReviewItem {
+  reviewId: string;
+  bookId: string;
+  bookTitle: string;
+  userId: string;
+  nickname: string;
+  rating: number;
+  content: string;
+  mine: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReviewPageResponse {
+  items: BookReviewItem[];
+  page: number;
+  size: number;
+  totalCount: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  first: boolean;
+  last: boolean;
+}
+
+export interface ReviewPayload {
+  rating: number;
+  content: string;
+}
+
+function buildReviewQuery(page: number, size: number, sort = "createdAt,desc"): string {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("size", String(size));
+  params.set("sort", sort);
+  return params.toString();
+}
+
+async function parseReviewResponse<T>(res: Response, fallbackMessage: string): Promise<T> {
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json?.success || !json?.data) {
+    throw new Error(json?.error?.message || fallbackMessage);
+  }
+  return json.data as T;
+}
+
+export async function fetchBookReviews(bookId: string, page = 0, size = 10): Promise<ReviewPageResponse> {
+  const res = await fetchWithAuth(`/api/books/${bookId}/reviews?${buildReviewQuery(page, size)}`, {
+    method: "GET",
+  });
+  return parseReviewResponse<ReviewPageResponse>(res, "리뷰 목록 조회에 실패했습니다.");
+}
+
+export async function fetchMyReviews(page = 0, size = 10): Promise<ReviewPageResponse> {
+  const res = await fetchWithAuth(`/api/reviews/me?${buildReviewQuery(page, size)}`, {
+    method: "GET",
+  });
+  return parseReviewResponse<ReviewPageResponse>(res, "내 리뷰 목록 조회에 실패했습니다.");
+}
+
+export async function createBookReview(bookId: string, payload: ReviewPayload): Promise<BookReviewItem> {
+  const res = await fetchWithAuth(`/api/books/${bookId}/reviews`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return parseReviewResponse<BookReviewItem>(res, "리뷰 작성에 실패했습니다.");
+}
+
+export async function updateBookReview(reviewId: string, payload: ReviewPayload): Promise<BookReviewItem> {
+  const res = await fetchWithAuth(`/api/reviews/${reviewId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return parseReviewResponse<BookReviewItem>(res, "리뷰 수정에 실패했습니다.");
+}
+
+export async function deleteBookReview(reviewId: string): Promise<{ reviewId: string; bookId: string; deleted: boolean }> {
+  const res = await fetchWithAuth(`/api/reviews/${reviewId}`, {
+    method: "DELETE",
+  });
+  return parseReviewResponse<{ reviewId: string; bookId: string; deleted: boolean }>(res, "리뷰 삭제에 실패했습니다.");
+}
+
 export interface BookLikeStatus {
   bookId: string;
   likeCount: number;
