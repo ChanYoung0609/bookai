@@ -2,7 +2,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { Sparkles, Flame, Clock3, ChevronLeft, ChevronRight } from "lucide-react";
-import { fetchBooks, type BookItem } from "../lib/api";
+import { fetchBanners, fetchBooks, type BannerItem, type BookItem } from "../lib/api";
 import { isLoggedIn, fetchUserMe, removeAccessToken, clearUserCache } from "../lib/auth";
 
 const HERO_ILLUSTRATION = {
@@ -15,12 +15,6 @@ const FEATURE_ICONS = {
   illustration: "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/c700d0e7-62f1-4a9c-abfd-c8a353491136.png",
   complete: "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/84a114ed-8746-4090-921c-3008150764cb.png",
 };
-const FEATURE_BANNERS = [
-  "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/8bccf1b4-f7f6-4ffe-8f83-5273c70da76d.png",
-  "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/8bccf1b4-f7f6-4ffe-8f83-5273c70da76d.png",
-  "https://img.mongle.cloud/picturebook/users/9311196f-aceb-41ef-937f-e04bda9de4b9/8bccf1b4-f7f6-4ffe-8f83-5273c70da76d.png",
-] as const;
-
 const CATEGORIES = [
   { id: "all", label: "전체" },
   { id: "fairy", label: "동화" },
@@ -170,6 +164,7 @@ const SliderSection = ({ title, icon, books, accentClass, showRank = false, more
 
 const LandingPage = () => {
   const [books, setBooks] = useState<BookItem[]>([]);
+  const [banners, setBanners] = useState<BannerItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [bannerIndex, setBannerIndex] = useState(0);
   const navigate = useNavigate();
@@ -180,19 +175,31 @@ const LandingPage = () => {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    fetchBanners(0, 10)
+      .then((data) => {
+        if (data.items.length > 0) {
+          setBanners(data.items);
+          setBannerIndex(0);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const bestBooks = useMemo(() => [...books].reverse().slice(0, 10), [books]);
   const latestBooks = useMemo(() => books.slice(0, 10), [books]);
-  const currentBanner = FEATURE_BANNERS[bannerIndex];
+  const currentBanner = banners[bannerIndex];
   const goToPrevBanner = () =>
-    setBannerIndex((prev) => (prev - 1 + FEATURE_BANNERS.length) % FEATURE_BANNERS.length);
-  const goToNextBanner = () => setBannerIndex((prev) => (prev + 1) % FEATURE_BANNERS.length);
+    setBannerIndex((prev) => (prev - 1 + banners.length) % banners.length);
+  const goToNextBanner = () => setBannerIndex((prev) => (prev + 1) % banners.length);
 
   useEffect(() => {
+    if (banners.length <= 1) return;
     const timer = window.setInterval(() => {
-      setBannerIndex((prev) => (prev + 1) % FEATURE_BANNERS.length);
+      setBannerIndex((prev) => (prev + 1) % banners.length);
     }, 3000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [banners.length]);
 
   const handleStartClick = async () => {
     if (isLoggedIn()) {
@@ -321,48 +328,64 @@ const LandingPage = () => {
               </div>
             </div>
 
-            <div className="w-full md:w-[380px] lg:w-[480px] self-start space-y-3">
-              <div className="relative aspect-[16/9] rounded-2xl overflow-hidden border border-white/20 glass-card shadow-sm">
-              <img
-                src={currentBanner}
-                alt="동화 제작 배너"
-                className="w-full h-full object-cover"
-                loading="lazy"
-                fetchPriority="low"
-                decoding="async"
-                referrerPolicy="no-referrer"
-              />
-                <button
-                  type="button"
-                  onClick={goToPrevBanner}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 text-on-surface shadow hover:bg-white"
-                  aria-label="이전 배너"
-                >
-                  <ChevronLeft size={18} className="mx-auto" />
-                </button>
-                <button
-                  type="button"
-                  onClick={goToNextBanner}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 text-on-surface shadow hover:bg-white"
-                  aria-label="다음 배너"
-                >
-                  <ChevronRight size={18} className="mx-auto" />
-                </button>
+            {currentBanner && (
+              <div className="w-full md:w-[380px] lg:w-[480px] self-start space-y-3">
+                <div className="relative aspect-[16/9] rounded-2xl overflow-hidden border border-white/20 glass-card shadow-sm">
+                  <a
+                    href={currentBanner.linkUrl || undefined}
+                    onClick={(e) => {
+                      if (!currentBanner.linkUrl) e.preventDefault();
+                    }}
+                    className="block w-full h-full"
+                  >
+                    <img
+                      src={currentBanner.imageUrl}
+                      alt={currentBanner.title || "동화 제작 배너"}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      fetchPriority="low"
+                      decoding="async"
+                      referrerPolicy="no-referrer"
+                    />
+                  </a>
+                  {banners.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={goToPrevBanner}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 text-on-surface shadow hover:bg-white"
+                        aria-label="이전 배너"
+                      >
+                        <ChevronLeft size={18} className="mx-auto" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={goToNextBanner}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 text-on-surface shadow hover:bg-white"
+                        aria-label="다음 배너"
+                      >
+                        <ChevronRight size={18} className="mx-auto" />
+                      </button>
+                    </>
+                  )}
+                </div>
+                {banners.length > 1 && (
+                  <div className="flex items-center justify-center gap-2">
+                    {banners.map((banner, idx) => (
+                      <button
+                        key={banner.bannerId}
+                        type="button"
+                        onClick={() => setBannerIndex(idx)}
+                        aria-label={`${idx + 1}번 배너로 이동`}
+                        className={`h-2.5 rounded-full transition-all ${
+                          idx === bannerIndex ? "w-6 bg-primary" : "w-2.5 bg-white/80 border border-white"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="flex items-center justify-center gap-2">
-                {FEATURE_BANNERS.map((_, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setBannerIndex(idx)}
-                    aria-label={`${idx + 1}번 배너로 이동`}
-                    className={`h-2.5 rounded-full transition-all ${
-                      idx === bannerIndex ? "w-6 bg-primary" : "w-2.5 bg-white/80 border border-white"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         </motion.div>
 

@@ -1,8 +1,19 @@
 ﻿import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { motion } from "motion/react";
-import { Sparkles, BookOpen, Users, Flag, X } from "lucide-react";
-import { fetchBookDetail, reportBook, type BookDetail, type ReportReason } from "../lib/api";
+import { Sparkles, BookOpen, Users, Flag, X, Star, Pencil, Trash2 } from "lucide-react";
+import {
+  createBookReview,
+  deleteBookReview,
+  fetchBookDetail,
+  fetchBookReviews,
+  reportBook,
+  updateBookReview,
+  type BookDetail,
+  type BookReviewItem,
+  type ReportReason,
+  type ReviewPageResponse,
+} from "../lib/api";
 import { isLoggedIn } from "../lib/auth";
 
 const reportReasons: ReadonlyArray<{ label: string; value: ReportReason }> = [
@@ -11,6 +22,8 @@ const reportReasons: ReadonlyArray<{ label: string; value: ReportReason }> = [
   { label: "저작권 침해", value: "COPYRIGHT" },
   { label: "기타", value: "OTHER" },
 ];
+
+const REVIEW_PAGE_SIZE = 10;
 
 const BookDetailPage = () => {
   const navigate = useNavigate();
@@ -25,6 +38,15 @@ const BookDetailPage = () => {
   const [reportDoneMessage, setReportDoneMessage] = useState<string | null>(null);
   const [reportErrorMessage, setReportErrorMessage] = useState<string | null>(null);
   const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reviews, setReviews] = useState<BookReviewItem[]>([]);
+  const [reviewPage, setReviewPage] = useState<ReviewPageResponse | null>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewErrorMessage, setReviewErrorMessage] = useState<string | null>(null);
+  const [reviewDoneMessage, setReviewDoneMessage] = useState<string | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewContent, setReviewContent] = useState("");
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -37,6 +59,34 @@ const BookDetailPage = () => {
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [id]);
+
+  const loadReviews = async (targetPage = 0, append = false) => {
+    if (!id) return;
+    setReviewLoading(true);
+    setReviewErrorMessage(null);
+
+    try {
+      const data = await fetchBookReviews(id, targetPage, REVIEW_PAGE_SIZE);
+      setReviewPage(data);
+      setReviews((prev) => (append ? [...prev, ...data.items] : data.items));
+    } catch (err) {
+      setReviewErrorMessage(err instanceof Error ? err.message : "리뷰 목록을 불러오지 못했습니다.");
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!id) return;
+    setReviews([]);
+    setReviewPage(null);
+    setReviewContent("");
+    setReviewRating(5);
+    setEditingReviewId(null);
+    loadReviews(0, false);
+  }, [id]);
+
+  const myReview = reviews.find((review) => review.mine);
 
   const handleSubmitReport = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +118,92 @@ const BookDetailPage = () => {
     } finally {
       setReportSubmitting(false);
     }
+  };
+
+  const resetReviewForm = () => {
+    setReviewRating(5);
+    setReviewContent("");
+    setEditingReviewId(null);
+  };
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!book?.bookId) return;
+
+    if (!isLoggedIn()) {
+      navigate("/login");
+      return;
+    }
+
+    const trimmedContent = reviewContent.trim();
+    if (!trimmedContent) {
+      setReviewErrorMessage("리뷰 내용을 입력해주세요.");
+      return;
+    }
+
+    setReviewSubmitting(true);
+    setReviewErrorMessage(null);
+
+    try {
+      if (editingReviewId) {
+        await updateBookReview(editingReviewId, {
+          rating: reviewRating,
+          content: trimmedContent,
+        });
+        setReviewDoneMessage("리뷰가 수정되었습니다.");
+      } else {
+        await createBookReview(book.bookId, {
+          rating: reviewRating,
+          content: trimmedContent,
+        });
+        setReviewDoneMessage("리뷰가 등록되었습니다.");
+      }
+
+      resetReviewForm();
+      await loadReviews(0, false);
+      window.setTimeout(() => setReviewDoneMessage(null), 2500);
+    } catch (err) {
+      setReviewErrorMessage(err instanceof Error ? err.message : "리뷰 처리에 실패했습니다.");
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
+  const handleEditReview = (review: BookReviewItem) => {
+    setEditingReviewId(review.reviewId);
+    setReviewRating(review.rating);
+    setReviewContent(review.content);
+    setReviewErrorMessage(null);
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!window.confirm("리뷰를 삭제할까요?")) return;
+
+    setReviewSubmitting(true);
+    setReviewErrorMessage(null);
+
+    try {
+      await deleteBookReview(reviewId);
+      resetReviewForm();
+      setReviewDoneMessage("리뷰가 삭제되었습니다.");
+      await loadReviews(0, false);
+      window.setTimeout(() => setReviewDoneMessage(null), 2500);
+    } catch (err) {
+      setReviewErrorMessage(err instanceof Error ? err.message : "리뷰 삭제에 실패했습니다.");
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
+  const formatReviewDate = (date: string) => {
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) return date;
+    return parsed.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
   if (loading) {
@@ -233,6 +369,173 @@ const BookDetailPage = () => {
                   </div>
                 </div>
               )}
+
+              <div className="space-y-5 pt-8 border-t border-on-surface-variant/10">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-bold flex items-center gap-2">
+                      <Star size={22} className="text-yellow-500 fill-yellow-500" />
+                      리뷰
+                    </h3>
+                    <p className="text-sm text-on-surface-variant mt-1">
+                      {reviewPage ? `${reviewPage.totalCount.toLocaleString()}개의 리뷰` : "리뷰를 불러오는 중입니다."}
+                    </p>
+                  </div>
+                </div>
+
+                {reviewDoneMessage && (
+                  <div className="rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-sm text-primary font-bold">
+                    {reviewDoneMessage}
+                  </div>
+                )}
+
+                {reviewErrorMessage && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 font-bold">
+                    {reviewErrorMessage}
+                  </div>
+                )}
+
+                {isLoggedIn() ? (
+                  !myReview || editingReviewId ? (
+                    <form onSubmit={handleSubmitReview} className="glass p-4 md:p-5 rounded-2xl space-y-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="font-bold text-on-surface">{editingReviewId ? "리뷰 수정" : "리뷰 작성"}</p>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: 5 }).map((_, index) => {
+                            const value = index + 1;
+                            const active = value <= reviewRating;
+                            return (
+                              <button
+                                key={value}
+                                type="button"
+                                onClick={() => setReviewRating(value)}
+                                className="p-1 text-yellow-500"
+                                aria-label={`${value}점`}
+                              >
+                                <Star size={22} className={active ? "fill-yellow-500" : ""} />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <textarea
+                        value={reviewContent}
+                        onChange={(e) => setReviewContent(e.target.value.slice(0, 500))}
+                        rows={4}
+                        maxLength={500}
+                        placeholder="이 책을 읽고 느낀 점을 남겨주세요."
+                        className="w-full rounded-xl border border-outline-variant/40 bg-white px-4 py-3 text-sm md:text-base focus:outline-none focus:border-primary"
+                      />
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <p className="text-xs text-on-surface-variant">{reviewContent.length}/500</p>
+                        <div className="flex gap-2">
+                          {editingReviewId && (
+                            <button
+                              type="button"
+                              onClick={resetReviewForm}
+                              disabled={reviewSubmitting}
+                              className="px-4 py-2 rounded-xl border border-outline-variant/40 text-on-surface-variant font-bold disabled:opacity-50"
+                            >
+                              취소
+                            </button>
+                          )}
+                          <button
+                            type="submit"
+                            disabled={reviewSubmitting}
+                            className="px-5 py-2 rounded-xl bg-primary text-white font-bold hover:bg-secondary disabled:opacity-50"
+                          >
+                            {reviewSubmitting ? "저장 중..." : editingReviewId ? "수정하기" : "등록하기"}
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary font-bold">
+                      이미 이 책에 리뷰를 작성했어요. 아래 내 리뷰에서 수정하거나 삭제할 수 있습니다.
+                    </div>
+                  )
+                ) : (
+                  <div className="glass p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <p className="text-sm text-on-surface-variant">로그인하면 리뷰를 작성할 수 있어요.</p>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/login")}
+                      className="px-5 py-2 rounded-xl bg-primary text-white font-bold hover:bg-secondary"
+                    >
+                      로그인
+                    </button>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  {reviews.map((review) => (
+                    <div key={review.reviewId} className="glass p-4 md:p-5 rounded-2xl space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-bold text-on-surface">{review.nickname}</p>
+                            {review.mine && (
+                              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">내 리뷰</span>
+                            )}
+                          </div>
+                          <div className="mt-1 flex items-center gap-2">
+                            <div className="flex items-center gap-0.5 text-yellow-500">
+                              {Array.from({ length: 5 }).map((_, index) => (
+                                <Star key={index} size={14} className={index < review.rating ? "fill-yellow-500" : ""} />
+                              ))}
+                            </div>
+                            <span className="text-xs text-on-surface-variant">{formatReviewDate(review.updatedAt || review.createdAt)}</span>
+                          </div>
+                        </div>
+
+                        {review.mine && (
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleEditReview(review)}
+                              disabled={reviewSubmitting}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-outline-variant/40 text-xs font-bold text-on-surface-variant hover:bg-surface-container-low disabled:opacity-50"
+                            >
+                              <Pencil size={13} />
+                              수정
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteReview(review.reviewId)}
+                              disabled={reviewSubmitting}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-red-200 text-xs font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                            >
+                              <Trash2 size={13} />
+                              삭제
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-on-surface-variant leading-relaxed text-sm md:text-base whitespace-pre-wrap">{review.content}</p>
+                    </div>
+                  ))}
+
+                  {!reviewLoading && reviews.length === 0 && (
+                    <div className="glass p-6 rounded-2xl text-center text-on-surface-variant">
+                      아직 작성된 리뷰가 없습니다.
+                    </div>
+                  )}
+                </div>
+
+                {reviewPage?.hasNext && (
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => loadReviews(reviewPage.page + 1, true)}
+                      disabled={reviewLoading}
+                      className="px-5 py-2 rounded-xl border border-outline-variant/40 text-on-surface-variant font-bold hover:bg-surface-container-low disabled:opacity-50"
+                    >
+                      {reviewLoading ? "불러오는 중..." : "리뷰 더보기"}
+                    </button>
+                  </div>
+                )}
+              </div>
             </motion.div>
           </div>
         </div>

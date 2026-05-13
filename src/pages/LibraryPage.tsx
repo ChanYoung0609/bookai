@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Plus, Wand2, Image as ImageIcon } from "lucide-react";
 import { fetchMyBooks, type MyBookItem } from "../lib/api";
