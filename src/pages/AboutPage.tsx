@@ -1,4 +1,3 @@
-import React from "react";
 import { motion } from "motion/react";
 import { ShieldCheck, Heart, Brain, Lock, Sparkles, CheckCircle2 } from "lucide-react";
 
