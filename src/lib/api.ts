@@ -1,4 +1,62 @@
+import { z } from "zod";
 import { fetchWithAuth } from "./auth";
+
+// ── 공통: 응답 envelope 검증 헬퍼 ──
+
+/**
+ * { success, data, error } envelope를 풀고 data를 zod 스키마로 검증한다.
+ * - HTTP 실패 / success=false / data 누락 → 서버 메시지(혹은 fallback)로 throw
+ * - 스키마 불일치 → fallback 메시지로 throw (개발 모드에서는 상세 이슈 로깅)
+ */
+async function parseApiResponse<T>(
+  res: Response,
+  schema: z.ZodType<T>,
+  fallbackMessage: string
+): Promise<T> {
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok || !json?.success || json?.data == null) {
+    throw new Error(json?.error?.message || fallbackMessage);
+  }
+
+  const result = schema.safeParse(json.data);
+  if (!result.success) {
+    if (import.meta.env.DEV) {
+      console.error(`[api] 응답 스키마 검증 실패: ${fallbackMessage}`, result.error.issues);
+    }
+    throw new Error(fallbackMessage);
+  }
+
+  return result.data;
+}
+
+function pageResponseSchema<T>(item: z.ZodType<T>): z.ZodType<PageResponse<T>> {
+  return z.object({
+    content: z.array(item),
+    totalElements: z.number(),
+    totalPages: z.number(),
+    last: z.boolean(),
+    first: z.boolean(),
+    number: z.number(),
+    size: z.number(),
+  }) as unknown as z.ZodType<PageResponse<T>>;
+}
+
+function cursorPageResponseSchema<T>(item: z.ZodType<T>): z.ZodType<CursorPageResponse<T>> {
+  return z.object({
+    items: z.array(item),
+    page: z.number(),
+    size: z.number(),
+    totalCount: z.number(),
+    totalPages: z.number(),
+    hasNext: z.boolean(),
+    hasPrevious: z.boolean(),
+    first: z.boolean(),
+    last: z.boolean(),
+  }) as unknown as z.ZodType<CursorPageResponse<T>>;
+}
+
+// ── 도서 목록 ──
 
 export interface BookItem {
   bookId: string;
@@ -51,17 +109,35 @@ export interface MyBookItem {
   createdAt: string;
 }
 
+const bookItemSchema: z.ZodType<BookItem> = z.object({
+  bookId: z.string(),
+  title: z.string(),
+  coverImageUrl: z.string(),
+  authorName: z.string(),
+  liked: z.boolean().optional(),
+});
+
+const bannerItemSchema: z.ZodType<BannerItem> = z.object({
+  bannerId: z.string(),
+  title: z.string(),
+  imageUrl: z.string(),
+  linkUrl: z.string().nullable().optional(),
+  displayOrder: z.number(),
+});
+
+const myBookItemSchema: z.ZodType<MyBookItem> = z.object({
+  bookId: z.string(),
+  title: z.string(),
+  authorName: z.string(),
+  coverImageUrl: z.string(),
+  status: z.enum(["DRAFT", "IN_PROGRESS", "COMPLETED"]),
+  visibility: z.enum(["PRIVATE", "PUBLIC"]),
+  createdAt: z.string(),
+});
+
 export async function fetchBooks(page: number, size: number): Promise<PageResponse<BookItem>> {
-  const res = await fetchWithAuth(`/api/books?page=${page}&size=${size}`, {
-    method: "GET",
-  });
-  const json = await res.json().catch(() => null);
-
-  if (!res.ok || !json?.success || !json?.data) {
-    throw new Error(json?.error?.message || "Failed to fetch books");
-  }
-
-  return json.data as PageResponse<BookItem>;
+  const res = await fetchWithAuth(`/api/books?page=${page}&size=${size}`, { method: "GET" });
+  return parseApiResponse(res, pageResponseSchema(bookItemSchema), "Failed to fetch books");
 }
 
 export async function fetchBanners(page = 0, size = 10): Promise<CursorPageResponse<BannerItem>> {
@@ -70,16 +146,8 @@ export async function fetchBanners(page = 0, size = 10): Promise<CursorPageRespo
   params.set("size", String(size));
   params.set("sort", "displayOrder,asc");
 
-  const res = await fetchWithAuth(`/api/banners?${params.toString()}`, {
-    method: "GET",
-  });
-  const json = await res.json().catch(() => null);
-
-  if (!res.ok || !json?.success || !json?.data) {
-    throw new Error(json?.error?.message || "배너 목록 조회에 실패했습니다.");
-  }
-
-  return json.data as CursorPageResponse<BannerItem>;
+  const res = await fetchWithAuth(`/api/banners?${params.toString()}`, { method: "GET" });
+  return parseApiResponse(res, cursorPageResponseSchema(bannerItemSchema), "배너 목록 조회에 실패했습니다.");
 }
 
 export async function fetchMyBooks(
@@ -92,17 +160,11 @@ export async function fetchMyBooks(
   params.set("size", String(size));
   if (status) params.set("status", status);
 
-  const res = await fetchWithAuth(`/api/books/me?${params.toString()}`, {
-    method: "GET",
-  });
-  const json = await res.json().catch(() => null);
-
-  if (!res.ok || !json?.success || !json?.data) {
-    throw new Error(json?.error?.message || "내 책 목록 조회에 실패했습니다.");
-  }
-
-  return json.data as PageResponse<MyBookItem>;
+  const res = await fetchWithAuth(`/api/books/me?${params.toString()}`, { method: "GET" });
+  return parseApiResponse(res, pageResponseSchema(myBookItemSchema), "내 책 목록 조회에 실패했습니다.");
 }
+
+// ── 도서 상세 ──
 
 export interface BookDetailPage {
   pageNumber: number;
@@ -125,18 +187,33 @@ export interface BookDetail {
   characters: BookDetailCharacter[];
 }
 
+const bookDetailSchema: z.ZodType<BookDetail> = z.object({
+  bookId: z.string(),
+  title: z.string(),
+  description: z.string(),
+  authorName: z.string(),
+  coverImageUrl: z.string(),
+  pages: z.array(
+    z.object({
+      pageNumber: z.number(),
+      content: z.string(),
+      imageUrl: z.string().optional(),
+    })
+  ),
+  characters: z.array(
+    z.object({
+      name: z.string(),
+      description: z.string(),
+    })
+  ),
+});
+
 export async function fetchBookDetail(bookId: string): Promise<BookDetail> {
-  const res = await fetchWithAuth(`/api/books/${bookId}`, {
-    method: "GET",
-  });
-  const json = await res.json().catch(() => null);
-
-  if (!res.ok || !json?.success || !json?.data) {
-    throw new Error(json?.error?.message || "Failed to fetch book detail");
-  }
-
-  return json.data as BookDetail;
+  const res = await fetchWithAuth(`/api/books/${bookId}`, { method: "GET" });
+  return parseApiResponse(res, bookDetailSchema, "Failed to fetch book detail");
 }
+
+// ── 신고 ──
 
 export type ReportReason = "SPAM" | "INAPPROPRIATE" | "COPYRIGHT" | "OTHER";
 
@@ -171,8 +248,10 @@ export async function reportBook(bookId: string, payload: ReportBookRequest): Pr
     throw new Error(json?.error?.message || "신고 접수에 실패했습니다.");
   }
 
-  return json?.data || "신고가 등록되었습니다.";
+  return typeof json?.data === "string" ? json.data : "신고가 등록되었습니다.";
 }
+
+// ── 리뷰 ──
 
 export interface BookReviewItem {
   reviewId: string;
@@ -204,6 +283,29 @@ export interface ReviewPayload {
   content: string;
 }
 
+const bookReviewItemSchema: z.ZodType<BookReviewItem> = z.object({
+  reviewId: z.string(),
+  bookId: z.string(),
+  bookTitle: z.string(),
+  userId: z.string(),
+  nickname: z.string(),
+  rating: z.number(),
+  content: z.string(),
+  mine: z.boolean(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+const reviewPageResponseSchema: z.ZodType<ReviewPageResponse> =
+  cursorPageResponseSchema(bookReviewItemSchema) as unknown as z.ZodType<ReviewPageResponse>;
+
+const reviewDeleteResultSchema: z.ZodType<{ reviewId: string; bookId: string; deleted: boolean }> =
+  z.object({
+    reviewId: z.string(),
+    bookId: z.string(),
+    deleted: z.boolean(),
+  });
+
 function buildReviewQuery(page: number, size: number, sort = "createdAt,desc"): string {
   const params = new URLSearchParams();
   params.set("page", String(page));
@@ -212,26 +314,18 @@ function buildReviewQuery(page: number, size: number, sort = "createdAt,desc"): 
   return params.toString();
 }
 
-async function parseReviewResponse<T>(res: Response, fallbackMessage: string): Promise<T> {
-  const json = await res.json().catch(() => null);
-  if (!res.ok || !json?.success || !json?.data) {
-    throw new Error(json?.error?.message || fallbackMessage);
-  }
-  return json.data as T;
-}
-
 export async function fetchBookReviews(bookId: string, page = 0, size = 10): Promise<ReviewPageResponse> {
   const res = await fetchWithAuth(`/api/books/${bookId}/reviews?${buildReviewQuery(page, size)}`, {
     method: "GET",
   });
-  return parseReviewResponse<ReviewPageResponse>(res, "리뷰 목록 조회에 실패했습니다.");
+  return parseApiResponse(res, reviewPageResponseSchema, "리뷰 목록 조회에 실패했습니다.");
 }
 
 export async function fetchMyReviews(page = 0, size = 10): Promise<ReviewPageResponse> {
   const res = await fetchWithAuth(`/api/reviews/me?${buildReviewQuery(page, size)}`, {
     method: "GET",
   });
-  return parseReviewResponse<ReviewPageResponse>(res, "내 리뷰 목록 조회에 실패했습니다.");
+  return parseApiResponse(res, reviewPageResponseSchema, "내 리뷰 목록 조회에 실패했습니다.");
 }
 
 export async function createBookReview(bookId: string, payload: ReviewPayload): Promise<BookReviewItem> {
@@ -240,7 +334,7 @@ export async function createBookReview(bookId: string, payload: ReviewPayload): 
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  return parseReviewResponse<BookReviewItem>(res, "리뷰 작성에 실패했습니다.");
+  return parseApiResponse(res, bookReviewItemSchema, "리뷰 작성에 실패했습니다.");
 }
 
 export async function updateBookReview(reviewId: string, payload: ReviewPayload): Promise<BookReviewItem> {
@@ -249,15 +343,17 @@ export async function updateBookReview(reviewId: string, payload: ReviewPayload)
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  return parseReviewResponse<BookReviewItem>(res, "리뷰 수정에 실패했습니다.");
+  return parseApiResponse(res, bookReviewItemSchema, "리뷰 수정에 실패했습니다.");
 }
 
-export async function deleteBookReview(reviewId: string): Promise<{ reviewId: string; bookId: string; deleted: boolean }> {
-  const res = await fetchWithAuth(`/api/reviews/${reviewId}`, {
-    method: "DELETE",
-  });
-  return parseReviewResponse<{ reviewId: string; bookId: string; deleted: boolean }>(res, "리뷰 삭제에 실패했습니다.");
+export async function deleteBookReview(
+  reviewId: string
+): Promise<{ reviewId: string; bookId: string; deleted: boolean }> {
+  const res = await fetchWithAuth(`/api/reviews/${reviewId}`, { method: "DELETE" });
+  return parseApiResponse(res, reviewDeleteResultSchema, "리뷰 삭제에 실패했습니다.");
 }
+
+// ── 좋아요 ──
 
 export interface BookLikeStatus {
   bookId: string;
@@ -292,15 +388,42 @@ export interface MyReadingProgressPage {
   totalPages: number;
 }
 
+const bookLikeStatusSchema: z.ZodType<BookLikeStatus> = z.object({
+  bookId: z.string(),
+  likeCount: z.number(),
+  likedByMe: z.boolean(),
+});
+
+const readingProgressSchema: z.ZodType<ReadingProgress> = z.object({
+  lastReadPageNumber: z.number(),
+  isCompleted: z.boolean(),
+});
+
+const myReadingProgressItemSchema: z.ZodType<MyReadingProgressItem> = z.object({
+  bookId: z.string(),
+  title: z.string(),
+  coverImageUrl: z.string().nullable(),
+  authorName: z.string().nullable(),
+  progressPercentage: z.number(),
+  isCompleted: z.boolean(),
+  lastReadAt: z.string(),
+});
+
+const myReadingProgressPageSchema: z.ZodType<MyReadingProgressPage> = z.object({
+  first: z.boolean(),
+  hasNext: z.boolean(),
+  hasPrevious: z.boolean(),
+  items: z.array(myReadingProgressItemSchema),
+  last: z.boolean(),
+  page: z.number(),
+  size: z.number(),
+  totalCount: z.number(),
+  totalPages: z.number(),
+});
+
 export async function fetchBookLikeStatus(bookId: string): Promise<BookLikeStatus> {
   const res = await fetchWithAuth(`/api/books/${bookId}/likes`, { method: "GET" });
-  const json = await res.json().catch(() => null);
-
-  if (!res.ok || !json?.success || !json?.data) {
-    throw new Error(json?.error?.message || "좋아요 상태 조회에 실패했습니다.");
-  }
-
-  return json.data as BookLikeStatus;
+  return parseApiResponse(res, bookLikeStatusSchema, "좋아요 상태 조회에 실패했습니다.");
 }
 
 async function handleBookLikeAction(
@@ -309,13 +432,7 @@ async function handleBookLikeAction(
   fallbackMessage: string
 ): Promise<BookLikeStatus> {
   const res = await fetchWithAuth(`/api/books/${bookId}/likes`, { method });
-  const json = await res.json().catch(() => null);
-
-  if (!res.ok || !json?.success || !json?.data) {
-    throw new Error(json?.error?.message || fallbackMessage);
-  }
-
-  return json.data as BookLikeStatus;
+  return parseApiResponse(res, bookLikeStatusSchema, fallbackMessage);
 }
 
 export async function addBookLike(bookId: string): Promise<BookLikeStatus> {
@@ -328,11 +445,7 @@ export async function removeBookLike(bookId: string): Promise<BookLikeStatus> {
 
 export async function fetchReadingProgress(bookId: string): Promise<ReadingProgress> {
   const res = await fetchWithAuth(`/api/books/${bookId}/reading-progress`, { method: "GET" });
-  const json = await res.json().catch(() => null);
-  if (!res.ok || !json?.success || !json?.data) {
-    throw new Error(json?.error?.message || "내 진행도 조회에 실패했습니다.");
-  }
-  return json.data as ReadingProgress;
+  return parseApiResponse(res, readingProgressSchema, "내 진행도 조회에 실패했습니다.");
 }
 
 export async function upsertReadingProgress(bookId: string, lastReadPageNumber: number): Promise<string> {
@@ -345,7 +458,7 @@ export async function upsertReadingProgress(bookId: string, lastReadPageNumber: 
   if (!res.ok || !json?.success) {
     throw new Error(json?.error?.message || "진행도 저장에 실패했습니다.");
   }
-  return (json?.data as string) || "책 진행도 업데이트 완료";
+  return typeof json?.data === "string" ? json.data : "책 진행도 업데이트 완료";
 }
 
 export async function completeReadingProgress(bookId: string, lastReadPageNumber: number): Promise<string> {
@@ -358,7 +471,7 @@ export async function completeReadingProgress(bookId: string, lastReadPageNumber
   if (!res.ok || !json?.success) {
     throw new Error(json?.error?.message || "완독 처리에 실패했습니다.");
   }
-  return (json?.data as string) || "완독 처리 완료";
+  return typeof json?.data === "string" ? json.data : "완독 처리 완료";
 }
 
 export async function fetchMyReadingProgresses(
@@ -371,13 +484,13 @@ export async function fetchMyReadingProgresses(
   params.set("size", String(size));
   params.set("includeCompleted", String(includeCompleted));
 
-  const res = await fetchWithAuth(`/api/user/me/reading-progresses?${params.toString()}`, { method: "GET" });
-  const json = await res.json().catch(() => null);
-  if (!res.ok || !json?.success || !json?.data) {
-    throw new Error(json?.error?.message || "이어보기 목록 조회에 실패했습니다.");
-  }
-  return json.data as MyReadingProgressPage;
+  const res = await fetchWithAuth(`/api/user/me/reading-progresses?${params.toString()}`, {
+    method: "GET",
+  });
+  return parseApiResponse(res, myReadingProgressPageSchema, "이어보기 목록 조회에 실패했습니다.");
 }
+
+// ── 랭킹 ──
 
 export interface RankingDateParams {
   year?: number;
@@ -410,6 +523,31 @@ export interface WeeklyPopularBookItem {
   rank: number;
 }
 
+const weeklyProlificAuthorItemSchema: z.ZodType<WeeklyProlificAuthorItem> = z.object({
+  userId: z.string(),
+  nickname: z.string(),
+  profileImage: z.string(),
+  bookCount: z.number(),
+  rank: z.number(),
+});
+
+const weeklyPopularAuthorItemSchema: z.ZodType<WeeklyPopularAuthorItem> = z.object({
+  userId: z.string(),
+  nickname: z.string(),
+  profileImage: z.string(),
+  totalLike: z.number(),
+  rank: z.number(),
+});
+
+const weeklyPopularBookItemSchema: z.ZodType<WeeklyPopularBookItem> = z.object({
+  bookId: z.string(),
+  title: z.string(),
+  coverImageUrl: z.string(),
+  authorNickname: z.string(),
+  likeCount: z.number(),
+  rank: z.number(),
+});
+
 function buildRankingQuery(params?: RankingDateParams): string {
   if (!params) return "";
   const search = new URLSearchParams();
@@ -420,34 +558,35 @@ function buildRankingQuery(params?: RankingDateParams): string {
   return qs ? `?${qs}` : "";
 }
 
-async function fetchRankingList<T>(path: string, fallbackMessage: string): Promise<T[]> {
+async function fetchRankingList<T>(
+  path: string,
+  itemSchema: z.ZodType<T>,
+  fallbackMessage: string
+): Promise<T[]> {
   const res = await fetchWithAuth(path, { method: "GET" });
-  const json = await res.json().catch(() => null);
-
-  if (!res.ok || !json?.success || !Array.isArray(json?.data)) {
-    throw new Error(json?.error?.message || fallbackMessage);
-  }
-
-  return json.data as T[];
+  return parseApiResponse(res, z.array(itemSchema), fallbackMessage);
 }
 
 export async function fetchWeeklyProlificAuthors(params?: RankingDateParams): Promise<WeeklyProlificAuthorItem[]> {
-  return fetchRankingList<WeeklyProlificAuthorItem>(
+  return fetchRankingList(
     `/api/ranking/weekly/prolific-authors${buildRankingQuery(params)}`,
+    weeklyProlificAuthorItemSchema,
     "이번 주 다작 작가 조회에 실패했습니다."
   );
 }
 
 export async function fetchWeeklyPopularAuthors(params?: RankingDateParams): Promise<WeeklyPopularAuthorItem[]> {
-  return fetchRankingList<WeeklyPopularAuthorItem>(
+  return fetchRankingList(
     `/api/ranking/weekly/popular-authors${buildRankingQuery(params)}`,
+    weeklyPopularAuthorItemSchema,
     "이번 주 인기 작가 조회에 실패했습니다."
   );
 }
 
 export async function fetchWeeklyPopularBooks(params?: RankingDateParams): Promise<WeeklyPopularBookItem[]> {
-  return fetchRankingList<WeeklyPopularBookItem>(
+  return fetchRankingList(
     `/api/ranking/weekly/popular-books${buildRankingQuery(params)}`,
+    weeklyPopularBookItemSchema,
     "이번 주 인기 책 조회에 실패했습니다."
   );
 }
@@ -459,8 +598,9 @@ export type MonthlyPopularBookItem = WeeklyPopularBookItem;
 export async function fetchMonthlyProlificAuthors(
   params?: Pick<RankingDateParams, "year" | "month">
 ): Promise<MonthlyProlificAuthorItem[]> {
-  return fetchRankingList<MonthlyProlificAuthorItem>(
+  return fetchRankingList(
     `/api/ranking/monthly/prolific-authors${buildRankingQuery(params)}`,
+    weeklyProlificAuthorItemSchema,
     "이달의 다작 작가 조회에 실패했습니다."
   );
 }
@@ -468,8 +608,9 @@ export async function fetchMonthlyProlificAuthors(
 export async function fetchMonthlyPopularAuthors(
   params?: Pick<RankingDateParams, "year" | "month">
 ): Promise<MonthlyPopularAuthorItem[]> {
-  return fetchRankingList<MonthlyPopularAuthorItem>(
+  return fetchRankingList(
     `/api/ranking/monthly/popular-authors${buildRankingQuery(params)}`,
+    weeklyPopularAuthorItemSchema,
     "이달의 인기 작가 조회에 실패했습니다."
   );
 }
@@ -477,8 +618,9 @@ export async function fetchMonthlyPopularAuthors(
 export async function fetchMonthlyPopularBooks(
   params?: Pick<RankingDateParams, "year" | "month">
 ): Promise<MonthlyPopularBookItem[]> {
-  return fetchRankingList<MonthlyPopularBookItem>(
+  return fetchRankingList(
     `/api/ranking/monthly/popular-books${buildRankingQuery(params)}`,
+    weeklyPopularBookItemSchema,
     "이달의 인기 책 조회에 실패했습니다."
   );
 }

@@ -19,7 +19,7 @@ jobs:
           script: |
             cd /home/jang/bookai
             git pull origin main
-            pnpm install
+            pnpm install --frozen-lockfile
             pnpm build
             sudo systemctl reload nginx
       - name: Discord notification

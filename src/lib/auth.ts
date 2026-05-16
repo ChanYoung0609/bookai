@@ -1,4 +1,6 @@
-﻿const API_BASE_URL = import.meta.env.VITE_API_URL || "https://mongle.cloud";
+﻿import { z } from "zod";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://mongle.cloud";
 
 export interface UserInfo {
   userId: string;
@@ -6,6 +8,25 @@ export interface UserInfo {
   nickname: string;
   profileImage: string;
   isNewUser: boolean;
+}
+
+const userInfoSchema: z.ZodType<UserInfo> = z.object({
+  userId: z.string(),
+  email: z.string(),
+  nickname: z.string(),
+  profileImage: z.string(),
+  isNewUser: z.boolean(),
+});
+
+function parseUserInfo(data: unknown): UserInfo | null {
+  const result = userInfoSchema.safeParse(data);
+  if (!result.success) {
+    if (import.meta.env.DEV) {
+      console.error("[auth] UserInfo 스키마 검증 실패", result.error.issues);
+    }
+    return null;
+  }
+  return result.data;
 }
 
 export function getAccessToken(): string | null {
@@ -86,7 +107,9 @@ export async function fetchUserMe(force = false): Promise<UserInfo | null> {
 
     const json = await res.json();
     if (json.success && json.data) {
-      cachedUser = json.data as UserInfo;
+      const parsed = parseUserInfo(json.data);
+      if (!parsed) return null;
+      cachedUser = parsed;
       cacheTimestamp = Date.now();
       return cachedUser;
     }
@@ -130,7 +153,10 @@ export async function updateUserProfile(request: ProfileUpdateRequest): Promise<
     throw new Error("프로필 수정 응답이 올바르지 않습니다.");
   }
 
-  const updated = json.data as UserInfo;
+  const updated = parseUserInfo(json.data);
+  if (!updated) {
+    throw new Error("프로필 수정 응답이 올바르지 않습니다.");
+  }
   cachedUser = updated;
   cacheTimestamp = Date.now();
   return updated;
