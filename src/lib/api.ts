@@ -388,6 +388,12 @@ export interface MyReadingProgressPage {
   totalPages: number;
 }
 
+export interface ReadingGoal {
+  targetCount: number | null;
+  completedCount: number;
+  achievementPercentage: number;
+}
+
 const bookLikeStatusSchema: z.ZodType<BookLikeStatus> = z.object({
   bookId: z.string(),
   likeCount: z.number(),
@@ -419,6 +425,12 @@ const myReadingProgressPageSchema: z.ZodType<MyReadingProgressPage> = z.object({
   size: z.number(),
   totalCount: z.number(),
   totalPages: z.number(),
+});
+
+const readingGoalSchema: z.ZodType<ReadingGoal> = z.object({
+  targetCount: z.number().nullable(),
+  completedCount: z.number(),
+  achievementPercentage: z.number(),
 });
 
 export async function fetchBookLikeStatus(bookId: string): Promise<BookLikeStatus> {
@@ -491,6 +503,31 @@ export async function fetchMyReadingProgresses(
 }
 
 // ── 랭킹 ──
+
+export async function fetchReadingGoal(params?: { year?: number; month?: number }): Promise<ReadingGoal> {
+  const search = new URLSearchParams();
+  if (typeof params?.year === "number") search.set("year", String(params.year));
+  if (typeof params?.month === "number") search.set("month", String(params.month));
+  const qs = search.toString();
+
+  const res = await fetchWithAuth(`/api/reading-goals${qs ? `?${qs}` : ""}`, {
+    method: "GET",
+  });
+  return parseApiResponse(res, readingGoalSchema, "읽기 목표 조회에 실패했습니다.");
+}
+
+export async function upsertReadingGoal(targetCount: number): Promise<string> {
+  const res = await fetchWithAuth("/api/reading-goals", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ targetCount }),
+  });
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.error?.message || "읽기 목표 저장에 실패했습니다.");
+  }
+  return typeof json?.data === "string" ? json.data : "읽기 목표가 저장되었습니다.";
+}
 
 export interface RankingDateParams {
   year?: number;

@@ -3,7 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { animate, motion } from "motion/react";
 import { BookOpen, Clock, TrendingUp, Heart, ArrowLeft, CheckCircle, BookMarked, Target, X } from "lucide-react";
 import { isLoggedIn } from "../lib/auth";
-import { fetchMyReadingProgresses, type MyReadingProgressItem } from "../lib/api";
+import {
+  fetchMyReadingProgresses,
+  fetchReadingGoal,
+  upsertReadingGoal,
+  type MyReadingProgressItem,
+  type ReadingGoal,
+} from "../lib/api";
 
 // TODO: 실제 API 연동
 const mockReaderStats = {
@@ -14,16 +20,20 @@ const mockReaderStats = {
   readingStreak: 7,
   likedBooks: 28,
   avgReadingPerDay: 35,
-  monthlyGoal: 10,
-  monthlyCompleted: 7,
 };
 
 const ReaderDashboardPage = () => {
   const navigate = useNavigate();
   const [readingSort, setReadingSort] = useState<"high" | "low" | "recent">("recent");
-  const [monthlyGoal, setMonthlyGoal] = useState<number>(mockReaderStats.monthlyGoal);
-  const [goalDraft, setGoalDraft] = useState<string>(String(mockReaderStats.monthlyGoal));
+  const [readingGoal, setReadingGoal] = useState<ReadingGoal>({
+    targetCount: null,
+    completedCount: 0,
+    achievementPercentage: 0,
+  });
+  const [goalDraft, setGoalDraft] = useState("10");
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [goalSaving, setGoalSaving] = useState(false);
+  const [goalError, setGoalError] = useState<string | null>(null);
   const [animatedGoalPercent, setAnimatedGoalPercent] = useState(0);
   const animatedGoalPercentRef = useRef(0);
   const [readingItems, setReadingItems] = useState<MyReadingProgressItem[]>([]);
@@ -37,19 +47,21 @@ const ReaderDashboardPage = () => {
     if (!isLoggedIn()) return;
     let cancelled = false;
 
-    Promise.all([
+    Promise.allSettled([
       fetchMyReadingProgresses(0, 20, false),
       fetchMyReadingProgresses(0, 20, true),
+      fetchReadingGoal(),
     ])
-      .then(([reading, all]) => {
+      .then(([reading, all, goal]) => {
         if (cancelled) return;
-        setReadingItems(reading.items ?? []);
-        setCompletedItems((all.items ?? []).filter((item) => item.isCompleted).slice(0, 3));
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setReadingItems([]);
-        setCompletedItems([]);
+
+        setReadingItems(reading.status === "fulfilled" ? reading.value.items ?? [] : []);
+        setCompletedItems(
+          all.status === "fulfilled" ? (all.value.items ?? []).filter((item) => item.isCompleted).slice(0, 3) : []
+        );
+        if (goal.status === "fulfilled") {
+          setReadingGoal(goal.value);
+        }
       });
 
     return () => {
@@ -57,7 +69,8 @@ const ReaderDashboardPage = () => {
     };
   }, []);
 
-  const goalPercent = Math.min(100, Math.round((mockReaderStats.monthlyCompleted / monthlyGoal) * 100));
+  const monthlyGoal = readingGoal.targetCount;
+  const goalPercent = Math.min(100, Math.max(0, Math.round(readingGoal.achievementPercentage)));
 
   useEffect(() => {
     const controls = animate(animatedGoalPercentRef.current, goalPercent, {
@@ -89,7 +102,8 @@ const ReaderDashboardPage = () => {
   }, [readingSort, readingItems]);
 
   const openGoalModal = () => {
-    setGoalDraft(String(monthlyGoal));
+    setGoalDraft(String(monthlyGoal ?? 10));
+    setGoalError(null);
     setIsGoalModalOpen(true);
   };
 
@@ -97,12 +111,31 @@ const ReaderDashboardPage = () => {
     setIsGoalModalOpen(false);
   };
 
-  const saveGoal = () => {
+  const saveGoal = async () => {
     const parsed = Number(goalDraft);
-    if (!Number.isFinite(parsed)) return;
-    const safeValue = Math.max(1, Math.min(100, Math.round(parsed)));
-    setMonthlyGoal(safeValue);
-    setIsGoalModalOpen(false);
+    if (!Number.isFinite(parsed)) {
+      setGoalError("목표를 숫자로 입력해주세요.");
+      return;
+    }
+
+    const safeValue = Math.round(parsed);
+    if (safeValue < 1 || safeValue > 999) {
+      setGoalError("목표는 1~999 사이여야 합니다.");
+      return;
+    }
+
+    setGoalSaving(true);
+    setGoalError(null);
+    try {
+      await upsertReadingGoal(safeValue);
+      const nextGoal = await fetchReadingGoal();
+      setReadingGoal(nextGoal);
+      setIsGoalModalOpen(false);
+    } catch (error) {
+      setGoalError(error instanceof Error ? error.message : "읽기 목표 저장에 실패했습니다.");
+    } finally {
+      setGoalSaving(false);
+    }
   };
 
   return (
@@ -256,9 +289,9 @@ const ReaderDashboardPage = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-headline font-bold text-on-surface">
-                    {mockReaderStats.monthlyCompleted}/{monthlyGoal}
+                    {readingGoal.completedCount}/{monthlyGoal ?? "-"}
                   </p>
-                  <p className="text-xs text-on-surface-variant">완독 목표</p>
+                  <p className="text-xs text-on-surface-variant">{monthlyGoal ? "완독 목표" : "목표 미설정"}</p>
                 </div>
               </div>
             </div>
@@ -313,18 +346,20 @@ const ReaderDashboardPage = () => {
             <input
               type="number"
               min={1}
-              max={100}
+              max={999}
               value={goalDraft}
               onChange={(e) => setGoalDraft(e.target.value)}
               className="mt-2 w-full rounded-xl border border-outline-variant/30 px-4 py-3 text-on-surface font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
 
-            <p className="mt-2 text-xs text-on-surface-variant">1권 ~ 100권 사이로 설정할 수 있어요.</p>
+            <p className="mt-2 text-xs text-on-surface-variant">1권 ~ 999권 사이로 설정할 수 있어요.</p>
+            {goalError && <p className="mt-2 text-xs font-bold text-red-600">{goalError}</p>}
 
             <div className="mt-5 flex gap-2">
               <button
                 type="button"
                 onClick={closeGoalModal}
+                disabled={goalSaving}
                 className="flex-1 rounded-xl py-3 font-bold border border-outline-variant/40 text-on-surface-variant hover:bg-surface-container-low"
               >
                 취소
@@ -332,9 +367,10 @@ const ReaderDashboardPage = () => {
               <button
                 type="button"
                 onClick={saveGoal}
-                className="flex-1 rounded-xl py-3 font-bold bg-primary text-white hover:bg-secondary"
+                disabled={goalSaving}
+                className="flex-1 rounded-xl py-3 font-bold bg-primary text-white hover:bg-secondary disabled:opacity-50"
               >
-                저장
+                {goalSaving ? "저장 중..." : "저장"}
               </button>
             </div>
           </div>
